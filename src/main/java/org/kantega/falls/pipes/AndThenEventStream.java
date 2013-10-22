@@ -28,7 +28,7 @@ public class AndThenEventStream<A> extends EventStream<A> {
         final Effect<Either<StreamEvent<A>, StreamEvent<A>>> bufferingEffect =
                 new Effect<Either<StreamEvent<A>, StreamEvent<A>>>() {
                     final ArrayList<A> buffer =
-                            new ArrayList<>();
+                            new ArrayList<A>();
                     final AtomicBoolean flushed =
                             new AtomicBoolean(false);
                     final Effect<StreamEvent<A>> eventualHandler =
@@ -37,7 +37,7 @@ public class AndThenEventStream<A> extends EventStream<A> {
                                         @Override
                                         public void e(StreamEvent.Next<A> next) {
                                             if (flushed.get())
-                                                effect.e(new StreamEvent.Next<>(next.value));
+                                                effect.e(new StreamEvent.Next<A>(next.value));
                                             else
                                                 buffer.add(next.value);
                                         }
@@ -49,7 +49,7 @@ public class AndThenEventStream<A> extends EventStream<A> {
                                         public void e(StreamEvent.Done<A> objectDone) {
                                             flushed.set(true);
                                             for (A a : buffer) {
-                                                effect.e(new StreamEvent.Next<>(a));
+                                                effect.e(new StreamEvent.Next<A>(a));
                                             }
                                             buffer.clear();
                                         }

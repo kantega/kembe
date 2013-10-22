@@ -16,15 +16,15 @@ public abstract class StreamEvent<A> {
     }
 
     public static <A> Next<A> next(A value){
-        return new Next<>(value);
+        return new Next<A>(value);
     }
 
     public static <A> Error<A> error(Exception e){
-        return new Error<>(e);
+        return new Error<A>(e);
     }
 
     public static <A> Done<A> done(){
-        return new Done<>();
+        return new Done<A>();
     }
     public abstract void effect(Effect<Next<A>> onNext, Effect<Error<A>> onException, Effect<Done<A>> onDone);
 
@@ -47,7 +47,7 @@ public abstract class StreamEvent<A> {
 
         @Override
         public <B> StreamEvent<B> map(F<A, B> f) {
-            return new Done<>();
+            return new Done<B>();
         }
     }
 
@@ -70,7 +70,7 @@ public abstract class StreamEvent<A> {
 
         @Override
         public <B> StreamEvent<B> map(F<A, B> f) {
-            return new Error<>(e);
+            return new Error<B>(e);
         }
     }
 
@@ -95,7 +95,7 @@ public abstract class StreamEvent<A> {
 
         @Override
         public <B> StreamEvent<B> map(F<A, B> f) {
-            return new Next<>(f.f(value));
+            return new Next<B>(f.f(value));
         }
     }
 

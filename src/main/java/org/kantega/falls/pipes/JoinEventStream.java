@@ -31,7 +31,7 @@ public class JoinEventStream<A, B> extends EventStream<P2<A, List<B>>> {
                         new Effect<StreamEvent.Next<Either<A, B>>>() {
 
                             final ArrayList<B> buffer =
-                                    new ArrayList<>();
+                                    new ArrayList<B>();
 
                             public void e(StreamEvent.Next<Either<A, B>> next) {
                                 if (next.value.isLeft()) {
@@ -44,8 +44,8 @@ public class JoinEventStream<A, B> extends EventStream<P2<A, List<B>>> {
 
                             }
                         },
-                        EventStreamSubscriber.forwardTo( effect ),
-                        EventStreamSubscriber.forwardTo( effect )
+                        EventStreamSubscriber.<Either<A,B>,P2<A, List<B>>>forwardError( effect ),
+                        EventStreamSubscriber.<Either<A,B>,P2<A, List<B>>>forwardDone( effect )
                 );
 
         final OpenEventStream<A> oneO =

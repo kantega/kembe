@@ -4,6 +4,12 @@ import fj.data.List;
 
 public abstract class OpenEventStream<A> {
 
+
+
+    public static <A> OpenEventStream<A> noOp(final EventStream<A> current){
+        return wrap(current,List.<OpenEventStream<?>>nil());
+    }
+
     public static <A> OpenEventStream<A> wrap( final EventStream<A> current, final OpenEventStream<?> prev){
         return wrap(current,List.<OpenEventStream<?>>single(prev));
     }
