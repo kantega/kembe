@@ -1,4 +1,4 @@
-package org.kantega.falls.pipes;
+package org.kantega.falls.stream;
 
 import fj.Effect;
 import fj.F;

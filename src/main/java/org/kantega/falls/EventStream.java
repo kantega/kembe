@@ -4,7 +4,7 @@ import fj.*;
 import fj.data.Either;
 import fj.data.Stream;
 import fj.data.Validation;
-import org.kantega.falls.pipes.*;
+import org.kantega.falls.stream.*;
 
 public abstract class EventStream<A> {
 
