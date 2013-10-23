@@ -24,7 +24,7 @@ public class ValidationMappedEventStream<E, T> extends EventStream<T>
     public OpenEventStream<T> open(final Effect<StreamEvent<T>> effect)
     {
         OpenEventStream<Validation<E, T>> open =
-                wrappedStream.<T>open(
+                wrappedStream.open(
                         EventStreamSubscriber.create(
                                 new Effect<StreamEvent.Next<Validation<E, T>>>()
                                 {
