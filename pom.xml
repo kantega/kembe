@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>falls.kantega.no</groupId>
-    <artifactId>falls.kantega.no</artifactId>
+    <groupId>kembe.kantega.no</groupId>
+    <artifactId>kembe-core</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>
