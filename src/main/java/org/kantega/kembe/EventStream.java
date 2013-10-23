@@ -8,8 +8,6 @@ import org.kantega.kembe.stream.*;
 
 public abstract class EventStream<A> {
 
-    public abstract OpenEventStream<A> open(Effect<StreamEvent<A>> effect);
-
     public static <A> EventStream<A> fromStream(final Stream<A> stream) {
         return new EventStream<A>() {
             @Override
@@ -37,6 +35,35 @@ public abstract class EventStream<A> {
             @Override
             public A f(Either<A, A> either) {
                 return Either.reduce( either );
+            }
+        };
+    }
+
+    public static <E, A> F<EventStream<Validation<E, A>>, EventStream<A>> normalizeValidation(final Show<E> show) {
+        return new F<EventStream<Validation<E, A>>, EventStream<A>>() {
+            @Override public EventStream<A> f(EventStream<Validation<E, A>> validationEventStream) {
+                return new RawMappedEventStream<>( validationEventStream, new F<StreamEvent<Validation<E, A>>, StreamEvent<A>>() {
+                    @Override public StreamEvent<A> f(StreamEvent<Validation<E, A>> validationStreamEvent) {
+                        return validationStreamEvent.fold(
+                                new F<Validation<E, A>, StreamEvent<A>>() {
+                                    @Override public StreamEvent<A> f(Validation<E, A> as) {
+                                        if(as.isSuccess())
+                                            return StreamEvent.next( as.success() );
+                                        else
+                                        return StreamEvent.error( new Exception(show.showS( as.fail())) );
+                                    }
+                                }, new F<Exception, StreamEvent<A>>() {
+                                    @Override public StreamEvent<A> f(Exception e) {
+                                        return StreamEvent.error( e );
+                                    }
+                                }, new P1<StreamEvent<A>>() {
+                                    @Override public StreamEvent<A> _1() {
+                                        return StreamEvent.done();
+                                    }
+                                }
+                        );
+                    }
+                } );
             }
         };
     }
@@ -94,7 +121,7 @@ public abstract class EventStream<A> {
         return EventStream.normalize( new EitherEventStream<A, A>( one, other ) );
     }
 
-
+    public abstract OpenEventStream<A> open(Effect<StreamEvent<A>> effect);
 
     public FilterEventStream<A> filter(final F<A, Boolean> pred) {
         return new FilterEventStream<A>( this, pred );
@@ -102,6 +129,10 @@ public abstract class EventStream<A> {
 
     public <B> MappedEventStream<A, B> map(final F<A, B> f) {
         return new MappedEventStream<A, B>( this, f );
+    }
+
+    public <B> RawMappedEventStream<A, B> rawMap(final F<StreamEvent<A>, StreamEvent<B>> f) {
+        return new RawMappedEventStream<A, B>( this, f );
     }
 
     public <B> BoundEventStream<A, B> bind(F<A, EventStream<B>> f) {
