@@ -1,4 +1,4 @@
-package no.kantega.falls;
+package no.kantega.kembe;
 
 import fj.F;
 import fj.P;
