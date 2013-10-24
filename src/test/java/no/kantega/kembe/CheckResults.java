@@ -42,7 +42,7 @@ public class CheckResults {
         return Property.exception( new P1<Property>() {
             public Property _1() {
                 if (validation.isFail())
-                    throw new AssertionError( "Validation is fail", validation.fail() );
+                    throw new AssertionError( validation.fail() );
                 return Property.prop( true );
             }
         } );
@@ -67,7 +67,7 @@ public class CheckResults {
             public Boolean f(final P2<String, CheckResult> result) {
                 result._2().exception().foreach( new Effect<Throwable>() {
                     public void e(Throwable throwable) {
-                        throw new AssertionError( summary( argReflectionShow() ).showS( result._2() ), throwable );
+                        throw new AssertionError( summary( argReflectionShow() ).showS( result._2() )+": "+ throwable.getMessage() );
                     }
                 } );
 
