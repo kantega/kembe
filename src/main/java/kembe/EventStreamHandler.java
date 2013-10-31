@@ -1,4 +1,4 @@
-package org.kantega.kembe;
+package kembe;
 
 public interface EventStreamHandler<A>
 {

@@ -1,12 +1,12 @@
-package org.kantega.kembe.stream;
+package kembe.stream;
 
 import fj.Effect;
 import fj.data.Either;
 import fj.data.List;
-import org.kantega.kembe.EventStream;
-import org.kantega.kembe.EventStreamSubscriber;
-import org.kantega.kembe.OpenEventStream;
-import org.kantega.kembe.StreamEvent;
+import kembe.EventStream;
+import kembe.EventStreamSubscriber;
+import kembe.OpenEventStream;
+import kembe.StreamEvent;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;

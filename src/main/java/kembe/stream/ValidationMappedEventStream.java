@@ -1,12 +1,12 @@
-package org.kantega.kembe.stream;
+package kembe.stream;
 
 import fj.Effect;
 import fj.Show;
 import fj.data.Validation;
-import org.kantega.kembe.EventStream;
-import org.kantega.kembe.EventStreamSubscriber;
-import org.kantega.kembe.OpenEventStream;
-import org.kantega.kembe.StreamEvent;
+import kembe.EventStream;
+import kembe.EventStreamSubscriber;
+import kembe.OpenEventStream;
+import kembe.StreamEvent;
 
 public class ValidationMappedEventStream<E, T> extends EventStream<T>
 {

@@ -8,9 +8,9 @@ import fj.data.Either;
 import fj.data.Stream;
 import fj.function.Integers;
 import org.junit.Test;
-import org.kantega.kembe.EventStream;
-import org.kantega.kembe.EventStreamHandler;
-import org.kantega.kembe.EventStreamSubscriber;
+import kembe.EventStream;
+import kembe.EventStreamHandler;
+import kembe.EventStreamSubscriber;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;

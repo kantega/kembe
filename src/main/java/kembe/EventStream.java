@@ -1,10 +1,10 @@
-package org.kantega.kembe;
+package kembe;
 
 import fj.*;
 import fj.data.Either;
 import fj.data.Stream;
 import fj.data.Validation;
-import org.kantega.kembe.stream.*;
+import kembe.stream.*;
 
 public abstract class EventStream<A> {
 

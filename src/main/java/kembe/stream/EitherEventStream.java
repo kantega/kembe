@@ -1,11 +1,11 @@
-package org.kantega.kembe.stream;
+package kembe.stream;
 
 import fj.Effect;
 import fj.data.Either;
 import fj.data.List;
-import org.kantega.kembe.EventStream;
-import org.kantega.kembe.OpenEventStream;
-import org.kantega.kembe.StreamEvent;
+import kembe.EventStream;
+import kembe.OpenEventStream;
+import kembe.StreamEvent;
 
 public class EitherEventStream<A, B> extends EventStream<Either<A, B>> {
     private final EventStream<A> one;

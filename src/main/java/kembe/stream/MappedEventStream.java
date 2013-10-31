@@ -1,10 +1,10 @@
-package org.kantega.kembe.stream;
+package kembe.stream;
 
 import fj.Effect;
 import fj.F;
-import org.kantega.kembe.EventStream;
-import org.kantega.kembe.OpenEventStream;
-import org.kantega.kembe.StreamEvent;
+import kembe.EventStream;
+import kembe.OpenEventStream;
+import kembe.StreamEvent;
 
 public class MappedEventStream<A, B> extends EventStream<B> {
 
