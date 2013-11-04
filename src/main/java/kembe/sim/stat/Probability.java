@@ -1,16 +1,17 @@
 package kembe.sim.stat;
 
-import fj.Equal;
-import fj.F;
-import fj.Ord;
+import fj.*;
 import kembe.rand.DoubleFromZeroIncToOne;
+import kembe.rand.RandomGen;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Random;
 
-public class Probability {
+public class Probability extends RandomGen<Boolean> {
 
     public static final Probability one = new Probability( DoubleFromZeroIncToOne.one );
+    public static final Probability absolutelyOneHundredPercentSure  = one;
     public static final Probability zero = new Probability( DoubleFromZeroIncToOne.zero );
     public static final Probability half = new Probability( DoubleFromZeroIncToOne.half );
     public static final Probability ninetyPercent = new Probability( new DoubleFromZeroIncToOne(0.900) );
@@ -36,6 +37,9 @@ public class Probability {
         this.threshold = threshold;
     }
 
+
+
+
     public static Probability plus(Probability one, Probability other) {
         return new Probability( new DoubleFromZeroIncToOne( one.threshold.value + ((1.0 - one.threshold.value) * other.threshold.value) ) );
     }
@@ -44,5 +48,17 @@ public class Probability {
         return "Probability(" +
                 "threshold=" + threshold.value +
                 ')';
+    }
+
+    @Override public Boolean next(final Random r) {
+       return RandomGen.randomDouble().map(new F<DoubleFromZeroIncToOne, Boolean>() {
+           @Override public Boolean f(DoubleFromZeroIncToOne doubleFromZeroIncToOne) {
+               return test(doubleFromZeroIncToOne);
+           }
+       }).next( r );
+    }
+
+    private boolean test(DoubleFromZeroIncToOne test){
+        return test.value <= threshold.value;
     }
 }

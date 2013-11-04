@@ -4,15 +4,15 @@ import fj.*;
 import fj.control.parallel.Actor;
 import fj.control.parallel.Strategy;
 import fj.data.List;
-import org.joda.time.Instant;
-import org.joda.time.ReadablePeriod;
 import kembe.EventStream;
 import kembe.OpenEventStream;
 import kembe.StreamEvent;
 import kembe.sim.ResourceId;
 import kembe.sim.Signal;
-import kembe.sim.SignalHandler;
+import kembe.sim.agents.Agent;
 import kembe.util.Actors;
+import org.joda.time.Instant;
+import org.joda.time.ReadablePeriod;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,15 +30,15 @@ public class InstantSimulation {
     private final ReadablePeriod period;
     private final Instant startTime;
     private final Instant endTime;
-    private HashMap<ResourceId, SignalHandler> drivers;
-    private HashMap<ResourceId, SignalHandler> handlers;
+    private HashMap<ResourceId, Agent> drivers;
+    private HashMap<ResourceId, Agent> handlers;
     private volatile Random random;
 
 
-    public InstantSimulation(Instant startTime, Instant endTime, ReadablePeriod period, Random random, HashMap<ResourceId, SignalHandler> drivers, HashMap<ResourceId, SignalHandler> handlers) {
+    public InstantSimulation(Instant startTime, Instant endTime, ReadablePeriod period, Random random, HashMap<ResourceId, Agent> drivers, HashMap<ResourceId, Agent> agents) {
         this.random = random;
         this.drivers = drivers;
-        this.handlers = handlers;
+        this.handlers = agents;
         this.startTime = startTime;
         this.endTime = endTime;
         this.period = period;
@@ -82,8 +82,7 @@ public class InstantSimulation {
         return new SimulatedTimeRunner( s ) {
             @Override public void run(Signal signal) {
                 ResourceId id = signal.to;
-                P3<? extends SignalHandler, fj.data.List<Signal>, Random> result = handlers.get( id ).signal( signal, random );
-                random = result._3();
+                P2<Agent, fj.data.List<Signal>> result = handlers.get( id ).signal( signal, random );
                 handlers.put( id, result._1() );
                 scheduleSignals( result._2(), actor, listener );
                 listener.e( StreamEvent.next( signal ) );
@@ -106,7 +105,7 @@ public class InstantSimulation {
 
                 signalTickToDrivers(service, actor, effect );
                 try {
-                    service.awaitTermination(5, TimeUnit.SECONDS);
+                    service.awaitTermination(5, TimeUnit.MINUTES);
                 } catch (InterruptedException e) {
                     effect.e( StreamEvent.<Signal>error( e ) );
                 }

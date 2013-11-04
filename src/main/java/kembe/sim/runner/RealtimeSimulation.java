@@ -1,25 +1,25 @@
 package kembe.sim.runner;
 
 import fj.Effect;
-import fj.P3;
+import fj.P2;
 import fj.data.List;
-import org.joda.time.Instant;
 import kembe.*;
 import kembe.sim.ResourceId;
 import kembe.sim.Signal;
-import kembe.sim.SignalHandler;
+import kembe.sim.agents.Agent;
+import org.joda.time.Instant;
 
 import java.util.*;
 
 public class RealtimeSimulation {
 
-    private HashMap<ResourceId, SignalHandler> drivers;
-    private HashMap<ResourceId, SignalHandler> handlers;
-    private EventStream<Instant> ticks;
-    private volatile Random random;
+    private volatile HashMap<ResourceId, Agent> drivers;
+    private final HashMap<ResourceId, Agent> handlers;
+    private final EventStream<Instant> ticks;
+    private final Random random;
 
 
-    public RealtimeSimulation(Random random, HashMap<ResourceId, SignalHandler> drivers, HashMap<ResourceId, SignalHandler> handlers, EventStream<Instant> ticks) {
+    public RealtimeSimulation(Random random, HashMap<ResourceId, Agent> drivers, HashMap<ResourceId, Agent> handlers, EventStream<Instant> ticks) {
         this.random = random;
         this.drivers = drivers;
         this.handlers = handlers;
@@ -30,14 +30,13 @@ public class RealtimeSimulation {
         return new TimerTask() {
             @Override public void run() {
 
-                HashMap<ResourceId, SignalHandler> newDrivers = new HashMap<>();
+                HashMap<ResourceId, Agent> newDrivers = new HashMap<>();
 
                 ArrayList<Signal> newSignals = new ArrayList<>();
 
-                for (Map.Entry<ResourceId, SignalHandler> entry : drivers.entrySet()) {
-                    P3<? extends SignalHandler, List<Signal>, Random> result = entry.getValue().signal( Signal.newSignal(  entry.getKey() , ResourceId.fromString( "Runner" ), instant, "tick" ), random );
+                for (Map.Entry<ResourceId, Agent> entry : drivers.entrySet()) {
+                    P2<Agent, List<Signal>> result = entry.getValue().signal( Signal.newSignal(  entry.getKey() , ResourceId.fromString( "Runner" ), instant, "tick" ), random );
                     newDrivers.put( entry.getKey(), result._1() );
-                    random = result._3();
                     newSignals.addAll( result._2().toCollection() );
                 }
 
@@ -57,8 +56,7 @@ public class RealtimeSimulation {
         return new TimerTask() {
             @Override public void run() {
                 ResourceId id = signal.to;
-                P3<? extends SignalHandler, List<Signal>, Random> result = handlers.get( id ).signal( signal, random );
-                random = result._3();
+                P2<Agent, List<Signal>> result = handlers.get( id ).signal( signal, random );
                 handlers.put( id, result._1() );
                 scheduleSignals( result._2(), timer,listener );
                 listener.e( StreamEvent.next( signal ) );

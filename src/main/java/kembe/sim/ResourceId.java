@@ -1,5 +1,7 @@
 package kembe.sim;
 
+import fj.F;
+
 public class ResourceId {
 
     public final String id;
@@ -11,6 +13,12 @@ public class ResourceId {
     public static ResourceId fromString(String id){
         return new ResourceId( id );
     }
+
+    public static F<String,ResourceId> fromString = new F<String, ResourceId>() {
+        @Override public ResourceId f(String s) {
+            return ResourceId.fromString( s );
+        }
+    };
 
     @Override
     public boolean equals(Object o) {

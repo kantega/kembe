@@ -1,42 +1,56 @@
 package kembe.sim;
 
-import org.joda.time.Instant;
-import org.joda.time.ReadablePeriod;
+import fj.data.List;
 import kembe.EventStream;
+import kembe.sim.agents.Agent;
 import kembe.sim.runner.InstantSimulation;
 import kembe.sim.runner.RealtimeSimulation;
+import org.joda.time.Instant;
+import org.joda.time.ReadablePeriod;
 
 import java.util.HashMap;
 import java.util.Random;
 
 public class SimulationBuilder {
 
-    private HashMap<ResourceId, SignalHandler> drivers = new HashMap<>(  );
+    private HashMap<ResourceId, Agent> drivers = new HashMap<>();
 
-    private HashMap<ResourceId,SignalHandler> handlers = new HashMap<>(  );
+    private HashMap<ResourceId, Agent> handlers = new HashMap<>();
 
-    private final EventStream<Instant> ticks;
-
-    public SimulationBuilder(EventStream<Instant> ticks){
-        this.ticks = ticks;
+    private SimulationBuilder() {
     }
 
-    public SimulationBuilder addDriver(ResourceId id, SignalHandler driver){
-        drivers.put( id, driver );
-        return addHandler( id,driver );
+    public static SimulationBuilder build(){
+        return new SimulationBuilder();
     }
 
-    public SimulationBuilder addHandler(ResourceId id, SignalHandler handler){
-        handlers.put(id,handler);
+    public SimulationBuilder addDriver(Agent driver) {
+        drivers.put( driver.id, driver );
+        return addHandler( driver );
+    }
+
+    public SimulationBuilder addHandler(Agent agent) {
+        handlers.put( agent.id, agent );
         return this;
     }
 
-
-    public EventStream<Signal> realtime(Random random){
-        return new RealtimeSimulation( random,drivers,handlers,ticks ).signals();
+    public SimulationBuilder addDrivers(List<Agent> drivers) {
+        for (Agent a : drivers)
+            addDriver( a );
+        return this;
     }
 
-    public EventStream<Signal> instant( Instant start, Instant stop, ReadablePeriod period,Random random){
-        return new InstantSimulation( start,stop,period,random,drivers,handlers ).signals();
+    public SimulationBuilder addHandlers(List<Agent> agents) {
+        for (Agent a : agents)
+            addHandler( a );
+        return this;
+    }
+
+    public EventStream<Signal> realtime(EventStream<Instant> ticks,Random random) {
+        return new RealtimeSimulation( random, drivers, handlers, ticks ).signals();
+    }
+
+    public EventStream<Signal> instant(Instant start, Instant stop, ReadablePeriod period, Random random) {
+        return new InstantSimulation( start, stop, period, random, drivers, handlers ).signals();
     }
 }
