@@ -1,4 +1,4 @@
-package kembe.rand;
+package kembe.sim.rand;
 
 public class AnyLong {
     public final long value;

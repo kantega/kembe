@@ -1,4 +1,4 @@
-package kembe.rand;
+package kembe.sim.rand;
 
 public class DoubleFromZeroIncToOne extends Bound {
     public final double value;

@@ -8,7 +8,7 @@ import fj.data.List;
 import kembe.EventStreamHandler;
 import kembe.EventStreamSubscriber;
 import kembe.Time;
-import kembe.rand.RandomGen;
+import kembe.sim.rand.RandomGen;
 import kembe.sim.*;
 import kembe.sim.agents.Agent;
 import kembe.sim.agents.SignalHandlerContext;

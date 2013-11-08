@@ -8,7 +8,7 @@ import fj.data.Option;
 import kembe.EventStreamHandler;
 import kembe.EventStreamSubscriber;
 import kembe.Time;
-import kembe.rand.RandomGen;
+import kembe.sim.rand.RandomGen;
 import kembe.sim.ResourceId;
 import kembe.sim.Signal;
 import kembe.sim.SimulationBuilder;
@@ -16,7 +16,6 @@ import kembe.sim.agents.Agent;
 import kembe.sim.agents.person.IdlePerson;
 import kembe.sim.agents.person.PersonBehaviour;
 import kembe.sim.agents.service.IdleIndependentService;
-import kembe.sim.stat.LocalTimeRangeOP;
 import kembe.sim.stat.OccurenceProbability;
 import kembe.sim.stat.Probability;
 import org.joda.time.*;
@@ -29,9 +28,9 @@ public class SystemSimulationTest {
 
     final PersonBehaviour personBehaviour =
             new PersonBehaviour(
-                    new LocalTimeRangeOP( new LocalTime( 7, 0 ), new LocalTime( 8, 0 ), Probability.one ),
-                    OccurenceProbability.wholeDay( Probability.absolutelyOneHundredPercentSure ),
-                    OccurenceProbability.wholeDay( Probability.absolutelyOneHundredPercentSure ),
+                    OccurenceProbability.inRange( new LocalTime( 7, 0 ), new LocalTime( 8, 0 ), Probability.one ),
+                    OccurenceProbability.wholeDay( Probability.one ),
+                    OccurenceProbability.wholeDay( Probability.one ),
                     RandomGen.oneOf( "serviceOne", "serviceTwo" ).map( ResourceId.fromString )
             );
 
@@ -43,7 +42,7 @@ public class SystemSimulationTest {
         final Instant now =
                 Time.now();
 
-        List<Agent> drivers =
+        final List<Agent> drivers =
                 List.unfold( new F<Integer, Option<P2<Agent, Integer>>>() {
                     @Override public Option<P2<Agent, Integer>> f(Integer integer) {
                         if (integer > 0)
@@ -53,7 +52,7 @@ public class SystemSimulationTest {
                     }
                 }, 0 );
 
-        List<Agent> services =
+        final List<Agent> services =
                 List.list(
                         new Agent( ResourceId.fromString( "loginHandler" ), now, new IdleIndependentService( duration ) ),
                         new Agent( ResourceId.fromString( "serviceOne" ), now, new IdleIndependentService( duration ) ),

@@ -3,7 +3,7 @@ package kembe.sim.agents.service;
 import fj.P;
 import fj.P2;
 import fj.data.List;
-import kembe.rand.RandomGen;
+import kembe.sim.rand.RandomGen;
 import kembe.sim.Signal;
 import kembe.sim.SignalHandler;
 import kembe.sim.agents.SignalHandlerContext;

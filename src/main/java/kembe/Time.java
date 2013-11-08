@@ -2,7 +2,7 @@ package kembe;
 
 import fj.F;
 import fj.Ord;
-import kembe.rand.RandomGen;
+import kembe.sim.rand.RandomGen;
 import org.joda.time.*;
 
 import java.util.Random;

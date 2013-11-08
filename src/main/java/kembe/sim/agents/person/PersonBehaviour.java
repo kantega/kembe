@@ -1,6 +1,6 @@
 package kembe.sim.agents.person;
 
-import kembe.rand.RandomGen;
+import kembe.sim.rand.RandomGen;
 import kembe.sim.ResourceId;
 import kembe.sim.stat.OccurenceProbability;
 

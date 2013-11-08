@@ -34,12 +34,30 @@ public class RandomTest {
         }
     } );
 
-
     @Test
     public void seed() {
         CheckResults.assertAndPrintResults(
                 Check.check( RandomTest.class ) );
 
+    }
+
+    @Test public void P() {
+        int samplesPrPeriod = 2;  //every sec
+        double targetP = 1;
+
+        double naivePPrPeriod = targetP / samplesPrPeriod;
+        double p1 = naivePPrPeriod;
+        double p2 = p1 + ((1 - p1) * naivePPrPeriod);
+        double p3 = p2 + ((1 - p2) * naivePPrPeriod);
+        double p4 = p3 + ((1 - p3) * naivePPrPeriod);
+        double p5 = p4 + ((1 - p4) * naivePPrPeriod);
+        double p6 = p5 + ((1 - p5) * naivePPrPeriod);
+
+        double p = naivePPrPeriod;
+        for(int i = 1; i < samplesPrPeriod ; i++){
+            p = p + (1-p)*naivePPrPeriod;
+        }
+        System.out.println( p );
     }
 
 }

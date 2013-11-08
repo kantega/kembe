@@ -6,8 +6,8 @@ import fj.F3;
 import fj.Function;
 import fj.test.Arbitrary;
 import fj.test.Gen;
-import kembe.rand.DoubleFromZeroIncToOne;
-import kembe.sim.stat.LocalTimeRangeOP;
+import kembe.sim.rand.DoubleFromZeroIncToOne;
+import kembe.sim.stat.OccurenceProbability;
 import kembe.sim.stat.Probability;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
@@ -28,10 +28,10 @@ public class TimeArbitraries {
         }
     } ) );
 
-    public static final Arbitrary<LocalTimeRangeOP> arbTimeRangeOP =
-            Arbitrary.arbitrary( arbProbability.gen.bind( arbLocalTime.gen, arbLocalTime.gen, Function.curry( new F3<Probability, LocalTime, LocalTime, LocalTimeRangeOP>() {
-                @Override public LocalTimeRangeOP f(Probability probability, LocalTime from, LocalTime to) {
-                    return new LocalTimeRangeOP( from,to,probability );
+    public static final Arbitrary<OccurenceProbability> arbTimeRangeOP =
+            Arbitrary.arbitrary( arbProbability.gen.bind( arbLocalTime.gen, arbLocalTime.gen, Function.curry( new F3<Probability, LocalTime, LocalTime, OccurenceProbability>() {
+                @Override public OccurenceProbability f(Probability probability, LocalTime from, LocalTime to) {
+                    return OccurenceProbability.inRange( from,to,probability );
                 }
             } ) ) );
 

@@ -1,4 +1,4 @@
-package kembe.rand;
+package kembe.sim.rand;
 
 import fj.F;
 import fj.data.List;

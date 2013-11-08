@@ -1,8 +1,8 @@
 package kembe.sim.stat;
 
 import fj.*;
-import kembe.rand.DoubleFromZeroIncToOne;
-import kembe.rand.RandomGen;
+import kembe.sim.rand.DoubleFromZeroIncToOne;
+import kembe.sim.rand.RandomGen;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -11,7 +11,6 @@ import java.util.Random;
 public class Probability extends RandomGen<Boolean> {
 
     public static final Probability one = new Probability( DoubleFromZeroIncToOne.one );
-    public static final Probability absolutelyOneHundredPercentSure  = one;
     public static final Probability zero = new Probability( DoubleFromZeroIncToOne.zero );
     public static final Probability half = new Probability( DoubleFromZeroIncToOne.half );
     public static final Probability ninetyPercent = new Probability( new DoubleFromZeroIncToOne(0.900) );

@@ -3,7 +3,7 @@ package kembe.sim;
 import fj.P;
 import fj.P2;
 import fj.data.List;
-import kembe.rand.RandomGen;
+import kembe.sim.rand.RandomGen;
 import kembe.sim.agents.SignalHandlerContext;
 
 import java.util.Random;
