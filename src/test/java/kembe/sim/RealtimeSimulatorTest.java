@@ -8,11 +8,10 @@ import fj.data.List;
 import kembe.EventStreamHandler;
 import kembe.EventStreamSubscriber;
 import kembe.Time;
-import kembe.sim.rand.RandomGen;
 import kembe.scheduler.Clock;
+import kembe.sim.rand.RandomGen;
 import org.joda.time.Instant;
 import org.joda.time.Seconds;
-import org.junit.Test;
 
 import java.util.Random;
 
@@ -60,7 +59,7 @@ public class RealtimeSimulatorTest {
                 }
             };
 
-    @Test
+    //@Test
     public void simple() throws InterruptedException {
 
 
@@ -69,7 +68,7 @@ public class RealtimeSimulatorTest {
         SimulationBuilder.build()
                 .addDriver( new Agent( ResourceId.fromString( "testDriver" ), start, testDriver ) )
                 .addHandler( new Agent( ResourceId.fromString( "testHandler" ), start, testHandler ) )
-                .realtime( Clock.seconds(), r )
+                .realtime( Clock.tenMillis(), r )
                 .open( EventStreamSubscriber.create( new EventStreamHandler<Signal>() {
                     @Override public void next(Signal signal) {
                         System.out.println( signal.at + ": " + Signal.chainShow.showS( signal ) + " ( " + Time.now().toString() + " )" );
@@ -84,7 +83,7 @@ public class RealtimeSimulatorTest {
                     }
                 } ) );
 
-        Thread.sleep( 60000 );
+        Thread.sleep( 1000 );
 
     }
 
