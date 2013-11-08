@@ -1,11 +1,10 @@
-package no.kantega;
+package kembe;
 
 import fj.F;
 import fj.test.Arbitrary;
 import fj.test.Property;
 import fj.test.reflect.Check;
 import fj.test.reflect.Name;
-import no.kantega.kembe.CheckResults;
 import org.junit.Test;
 
 import java.util.Random;

@@ -1,4 +1,4 @@
-package no.kantega.kembe;
+package kembe;
 
 import fj.*;
 import fj.data.List;

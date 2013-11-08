@@ -6,7 +6,7 @@ import fj.data.List;
 import kembe.*;
 import kembe.sim.ResourceId;
 import kembe.sim.Signal;
-import kembe.sim.agents.Agent;
+import kembe.sim.Agent;
 import org.joda.time.Instant;
 
 import java.util.*;

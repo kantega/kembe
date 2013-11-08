@@ -1,4 +1,4 @@
-package no.kantega.kembe;
+package kembe;
 
 import fj.F;
 import fj.P;
@@ -8,9 +8,6 @@ import fj.data.Either;
 import fj.data.Stream;
 import fj.function.Integers;
 import org.junit.Test;
-import kembe.EventStream;
-import kembe.EventStreamHandler;
-import kembe.EventStreamSubscriber;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;

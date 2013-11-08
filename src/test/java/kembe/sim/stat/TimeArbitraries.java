@@ -1,4 +1,4 @@
-package no.kantega.kembe.sim.stat;
+package kembe.sim.stat;
 
 import fj.F;
 import fj.F2;
@@ -7,8 +7,6 @@ import fj.Function;
 import fj.test.Arbitrary;
 import fj.test.Gen;
 import kembe.sim.rand.DoubleFromZeroIncToOne;
-import kembe.sim.stat.OccurenceProbability;
-import kembe.sim.stat.Probability;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 import org.joda.time.Interval;

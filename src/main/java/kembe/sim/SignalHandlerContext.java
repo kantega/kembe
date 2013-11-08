@@ -1,4 +1,4 @@
-package kembe.sim.agents;
+package kembe.sim;
 
 import kembe.sim.ResourceId;
 import org.joda.time.Instant;

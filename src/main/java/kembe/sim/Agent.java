@@ -1,12 +1,9 @@
-package kembe.sim.agents;
+package kembe.sim;
 
 import fj.P;
 import fj.P2;
 import fj.data.List;
 import kembe.Time;
-import kembe.sim.ResourceId;
-import kembe.sim.Signal;
-import kembe.sim.SignalHandler;
 import org.joda.time.Instant;
 import org.joda.time.Interval;
 

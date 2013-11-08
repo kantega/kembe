@@ -1,4 +1,4 @@
-package no.kantega.kembe;
+package kembe;
 
 import junit.framework.Assert;
 

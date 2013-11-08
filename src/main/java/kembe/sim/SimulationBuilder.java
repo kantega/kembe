@@ -2,7 +2,6 @@ package kembe.sim;
 
 import fj.data.List;
 import kembe.EventStream;
-import kembe.sim.agents.Agent;
 import kembe.sim.runner.InstantSimulation;
 import kembe.sim.runner.RealtimeSimulation;
 import org.joda.time.Instant;

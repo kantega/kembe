@@ -1,4 +1,4 @@
-package no.kantega.kembe.sim;
+package kembe.sim;
 
 import fj.Equal;
 import fj.F;
@@ -9,9 +9,7 @@ import kembe.EventStreamHandler;
 import kembe.EventStreamSubscriber;
 import kembe.Time;
 import kembe.sim.rand.RandomGen;
-import kembe.sim.*;
-import kembe.sim.agents.Agent;
-import kembe.sim.agents.SignalHandlerContext;
+import kembe.scheduler.Clock;
 import org.joda.time.Instant;
 import org.joda.time.Seconds;
 import org.junit.Test;
@@ -21,14 +19,11 @@ import java.util.Random;
 import static fj.P.p;
 import static fj.data.List.list;
 
-public class InstantSimulatorTest {
+public class RealtimeSimulatorTest {
     private RandomGen<Boolean> oneOfTen =
             RandomGen.randomInt( 0, 9 ).map( new F<Integer, Boolean>() {
                 @Override public Boolean f(Integer integer) {
-                    if (integer == 0)
-                        return true;
-                    else
-                        return false;
+                    return (integer == 0);
                 }
             } );
 
@@ -46,16 +41,16 @@ public class InstantSimulatorTest {
 
     private SignalHandler testHandler =
             new NonrandomSignalHandler() {
-                @Override protected P2<SignalHandler, List<Signal>> signal(Signal signal,SignalHandlerContext context) {
+                @Override protected P2<SignalHandler, List<Signal>> signal(Signal signal, SignalHandlerContext context) {
 
                     final SignalHandler self = this;
 
                     if (signal.msg.startsWith( "GET" ))
                         return P.p( new NonrandomSignalHandler() {
 
-                            @Override protected P2<SignalHandler, List<Signal>> signal(Signal signal,SignalHandlerContext context) {
+                            @Override protected P2<SignalHandler, List<Signal>> signal(Signal signal, SignalHandlerContext context) {
                                 if (Equal.stringEqual.eq( signal.msg, "self" ))
-                                    return P.p( self, list( signal.follow( ResourceId.fromString( "testDriver" ), Time.quantumIncrement( signal.at ), "OK" ) ) );
+                                    return P.p( self, list( signal.followImmediately( ResourceId.fromString( "testDriver" ), "OK" ) ) );
                                 else
                                     return P.p( self(), List.<Signal>nil() );
                             }
@@ -70,21 +65,14 @@ public class InstantSimulatorTest {
 
 
         Random r = new Random( 2 );
-        Instant now = Time.now();
-
+        Instant start = Time.now();
         SimulationBuilder.build()
-                .addDriver( new Agent( ResourceId.fromString( "testDriver" ), now, testDriver ) )
-                .addHandler( new Agent( ResourceId.fromString( "testHandler" ), now, testHandler ) )
-                .instant( now, now.plus( Seconds.seconds( 60 ).toStandardDuration() ), Seconds.ONE, r )
-                .filter( new F<Signal, Boolean>() {
-                    @Override public Boolean f(Signal signal) {
-                        return !signal.msg.startsWith( "tick" );
-                    }
-                } )
+                .addDriver( new Agent( ResourceId.fromString( "testDriver" ), start, testDriver ) )
+                .addHandler( new Agent( ResourceId.fromString( "testHandler" ), start, testHandler ) )
+                .realtime( Clock.seconds(), r )
                 .open( EventStreamSubscriber.create( new EventStreamHandler<Signal>() {
                     @Override public void next(Signal signal) {
                         System.out.println( signal.at + ": " + Signal.chainShow.showS( signal ) + " ( " + Time.now().toString() + " )" );
-
                     }
 
                     @Override public void error(Exception e) {
@@ -95,6 +83,10 @@ public class InstantSimulatorTest {
 
                     }
                 } ) );
+
+        Thread.sleep( 60000 );
+
     }
+
 
 }

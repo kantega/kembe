@@ -9,7 +9,7 @@ import kembe.OpenEventStream;
 import kembe.StreamEvent;
 import kembe.sim.ResourceId;
 import kembe.sim.Signal;
-import kembe.sim.agents.Agent;
+import kembe.sim.Agent;
 import kembe.util.Actors;
 import org.joda.time.Instant;
 import org.joda.time.ReadablePeriod;
