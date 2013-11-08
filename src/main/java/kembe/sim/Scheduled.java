@@ -28,7 +28,7 @@ public final class Scheduled<A> {
     private final Actor<P2<Either<A, Actor<A>>, Scheduled<A>>> actor;
     private final Strategy<Unit> s;
     private final CountDownLatch l = new CountDownLatch( 1 );
-    private final Queue<Actor<A>> waiting = new LinkedList<>();
+    private final Queue<Actor<A>> waiting = new LinkedList<Actor<A>>();
     private volatile Option<A> v = none();
 
     private Scheduled(final Strategy<Unit> s, final Actor<P2<Either<A, Actor<A>>, Scheduled<A>>> qa) {
@@ -54,7 +54,7 @@ public final class Scheduled<A> {
                             p._1().right().value().act( snd.v.some() );
                     }
                 } );
-        return new Scheduled<>( s, q );
+        return new Scheduled<A>( s, q );
     }
 
     public static <A> Scheduled<A> scheduleAt(Strategy<Unit> strategy, Timer timer, Instant instant, final Callable<A> callable) {

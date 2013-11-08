@@ -47,10 +47,10 @@ public class InstantSimulation {
     private void signalTickToDrivers(final ExecutorService executor, final Actor<SimulatedTimeRunner> actor, final Effect<StreamEvent<Signal>> listener) {
 
         Instant now = startTime;
-        ArrayList<List<Signal>> ticks = new ArrayList<>();
+        ArrayList<List<Signal>> ticks = new ArrayList<List<Signal>>();
         while (now.isBefore( endTime )) {
             final Instant simulatedTime = now;
-            List<Signal> signals = List.iterableList( new ArrayList<>( drivers.keySet() ) ).map( new F<ResourceId, Signal>() {
+            List<Signal> signals = List.iterableList( new ArrayList<ResourceId>( drivers.keySet() ) ).map( new F<ResourceId, Signal>() {
                 @Override public Signal f(ResourceId resourceId) {
                     return Signal.newSignal( resourceId, ResourceId.fromString( "Runner" ), simulatedTime, "tick" );
                 }
