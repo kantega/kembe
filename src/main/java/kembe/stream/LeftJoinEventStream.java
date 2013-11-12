@@ -12,13 +12,13 @@ import kembe.StreamEvent;
 
 import java.util.ArrayList;
 
-public class JoinEventStream<A, B> extends EventStream<P2<A, List<B>>> {
+public class LeftJoinEventStream<A, B> extends EventStream<P2<A, List<B>>> {
 
 
     private final EventStream<A> one;
     private final EventStream<B> other;
 
-    public JoinEventStream(EventStream<A> one, EventStream<B> other) {
+    public LeftJoinEventStream(EventStream<A> one, EventStream<B> other) {
         this.one = one;
         this.other = other;
     }

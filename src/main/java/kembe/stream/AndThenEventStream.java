@@ -66,8 +66,9 @@ public class AndThenEventStream<A> extends EventStream<A> {
                     }
                 };
 
-        OpenEventStream<A> firstOpenStream = first.open(bufferingEffect.comap(Either.<StreamEvent<A>, StreamEvent<A>>left_()));
         OpenEventStream<A> eventualOpenStream = eventual.open(bufferingEffect.comap(Either.<StreamEvent<A>, StreamEvent<A>>right_()));
+        OpenEventStream<A> firstOpenStream = first.open(bufferingEffect.comap(Either.<StreamEvent<A>, StreamEvent<A>>left_()));
+
 
         return OpenEventStream.wrap(this, List.<OpenEventStream<?>>list(firstOpenStream, eventualOpenStream));
     }

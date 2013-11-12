@@ -151,7 +151,7 @@ public abstract class EventStream<A> {
         return new AndThenEventStream<A>( this, eventual );
     }
 
-    public <B> JoinEventStream<A, B> join(EventStream<B> other) {
-        return new JoinEventStream<A, B>( this, other );
+    public <B> LeftJoinEventStream<A, B> join(EventStream<B> other) {
+        return new LeftJoinEventStream<A, B>( this, other );
     }
 }
