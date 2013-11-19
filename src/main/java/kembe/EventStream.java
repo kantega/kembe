@@ -2,6 +2,7 @@ package kembe;
 
 import fj.*;
 import fj.data.Either;
+import fj.data.Option;
 import fj.data.Stream;
 import fj.data.Validation;
 import kembe.stream.*;
@@ -68,7 +69,7 @@ public abstract class EventStream<A> {
         };
     }
 
-    public static <A, B> P2<EventStream<A>, EventStream<B>> split(final EventStream<Either<A, B>> eitherStream) {
+    public static <A, B> Split<A,B> split(final EventStream<Either<A, B>> eitherStream) {
         EventStream<A> as = eitherStream
                 .map( Functions.<A, B>left() )
                 .filter( Functions.<A>isSome() )
@@ -79,7 +80,7 @@ public abstract class EventStream<A> {
                 .filter( Functions.<B>isSome() )
                 .map( Functions.<B>getSome() );
 
-        return P.p( as, bs );
+        return new Split(as,bs);
     }
 
     public static <A> F<EventStream<A>, OpenEventStream<A>> open_(final Effect<StreamEvent<A>> handler) {
@@ -121,6 +122,10 @@ public abstract class EventStream<A> {
         return EventStream.normalize( new EitherEventStream<A, A>( one, other ) );
     }
 
+    public static <A,B> OptionalEventStream<A,B> mapOption(EventStream<A> as, F<A,Option<B>> f){
+        return new OptionalEventStream<A, B>( as,f );
+    }
+
     public abstract OpenEventStream<A> open(Effect<StreamEvent<A>> effect);
 
     public FilterEventStream<A> filter(final F<A, Boolean> pred) {
@@ -129,6 +134,10 @@ public abstract class EventStream<A> {
 
     public <B> MappedEventStream<A, B> map(final F<A, B> f) {
         return new MappedEventStream<A, B>( this, f );
+    }
+
+    public <B> OptionalEventStream<A,B> mapOption(final F<A,Option<B>> f){
+        return EventStream.mapOption( this,f );
     }
 
     public <B> RawMappedEventStream<A, B> rawMap(final F<StreamEvent<A>, StreamEvent<B>> f) {

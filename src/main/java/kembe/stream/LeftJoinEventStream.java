@@ -27,7 +27,7 @@ public class LeftJoinEventStream<A, B> extends EventStream<P2<A, List<B>>> {
     public OpenEventStream<P2<A, List<B>>> open(final Effect<StreamEvent<P2<A, List<B>>>> effect) {
 
         final Effect<StreamEvent<Either<A, B>>> eitherE =
-                EventStreamSubscriber.create(
+                EventStreamSubscriber.forwardTo(effect).onNext(
                         new Effect<StreamEvent.Next<Either<A, B>>>() {
 
                             final ArrayList<B> buffer =
@@ -43,10 +43,7 @@ public class LeftJoinEventStream<A, B> extends EventStream<P2<A, List<B>>> {
                                 }
 
                             }
-                        },
-                        EventStreamSubscriber.<Either<A,B>,P2<A, List<B>>>forwardError( effect ),
-                        EventStreamSubscriber.<Either<A,B>,P2<A, List<B>>>forwardDone( effect )
-                );
+                        });
 
         final OpenEventStream<A> oneO =
                 one.open(eitherE.comap(StreamEvent.lift(Either.<A, B>left_())));

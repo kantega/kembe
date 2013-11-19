@@ -32,7 +32,7 @@ public class AndThenEventStream<A> extends EventStream<A> {
                     final AtomicBoolean flushed =
                             new AtomicBoolean(false);
                     final Effect<StreamEvent<A>> eventualHandler =
-                            EventStreamSubscriber.wrap( effect ).onNext(
+                            EventStreamSubscriber.forwardTo( effect ).onNext(
                                     new Effect<StreamEvent.Next<A>>() {
                                         @Override
                                         public void e(StreamEvent.Next<A> next) {
@@ -44,7 +44,7 @@ public class AndThenEventStream<A> extends EventStream<A> {
                                     }
                             );
                     final Effect<StreamEvent<A>> firstHandler =
-                            EventStreamSubscriber.wrap(effect).onDone(
+                            EventStreamSubscriber.forwardTo(effect).onDone(
                                     new Effect<StreamEvent.Done<A>>() {
                                         public void e(StreamEvent.Done<A> objectDone) {
                                             flushed.set(true);

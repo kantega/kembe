@@ -25,7 +25,7 @@ public class ValidationMappedEventStream<E, T> extends EventStream<T>
     {
         OpenEventStream<Validation<E, T>> open =
                 wrappedStream.open(
-                        EventStreamSubscriber.create(
+                        EventStreamSubscriber.forwardTo(effect).onNext(
                                 new Effect<StreamEvent.Next<Validation<E, T>>>()
                                 {
                                     @Override
@@ -35,9 +35,7 @@ public class ValidationMappedEventStream<E, T> extends EventStream<T>
                                         { effect.e(StreamEvent.next(next.value.success())); } else
                                         { effect.e(StreamEvent.<T>error(new Exception(errorShow.showS(next.value.fail())))); }
                                     }
-                                },
-                                EventStreamSubscriber.<Validation<E, T>,T>forwardError(effect),
-                                EventStreamSubscriber.<Validation<E, T>,T>forwardDone(effect)));
+                                }));
 
         return OpenEventStream.wrap(this, open);
     }

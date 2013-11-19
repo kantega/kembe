@@ -2,7 +2,6 @@ package kembe;
 
 import fj.F;
 import fj.P;
-import fj.P2;
 import fj.Show;
 import fj.data.Either;
 import fj.data.Stream;
@@ -87,7 +86,7 @@ public class EventStreamFactoryMethodsTest {
         final CountDownLatch doneLatch1 = new CountDownLatch( 1 );
         final CountDownLatch nextLatch2 = new CountDownLatch( to / 2 );
         final CountDownLatch doneLatch2 = new CountDownLatch( 1 );
-        P2<EventStream<Integer>, EventStream<Integer>> streams =
+        Split<Integer, Integer> streams =
                 EventStream.split( EventStream
                         .fromStream( Stream.range( from, to ) )
                         .map( new F<Integer, Either<Integer, Integer>>() {

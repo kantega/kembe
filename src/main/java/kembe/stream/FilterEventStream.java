@@ -20,7 +20,7 @@ public class FilterEventStream<A> extends EventStream<A> {
     @Override
     public OpenEventStream<A> open(final Effect<StreamEvent<A>> effect) {
 
-        return wrapped.open( EventStreamSubscriber.<A>wrap( effect ).onNext( new Effect<StreamEvent.Next<A>>() {
+        return wrapped.open( EventStreamSubscriber.<A>forwardTo( effect ).onNext( new Effect<StreamEvent.Next<A>>() {
             @Override
             public void e(StreamEvent.Next<A> next) {
                 if (predicate.f( next.value )) {

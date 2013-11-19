@@ -32,7 +32,7 @@ public class BoundEventStream<A, B> extends EventStream<B>
                             {
                                 EventStream<B> bs = f.f(a);
                                 bs.open(
-                                        EventStreamSubscriber.wrap(effect).onDone(
+                                        EventStreamSubscriber.forwardTo(effect).onDone(
                                                 EventStreamSubscriber.<B>noOpDone()
                                         )
                                 );
