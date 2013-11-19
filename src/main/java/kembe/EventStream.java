@@ -1,10 +1,10 @@
 package kembe;
 
-import fj.*;
-import fj.data.Either;
-import fj.data.Option;
-import fj.data.Stream;
-import fj.data.Validation;
+import fj.Effect;
+import fj.F;
+import fj.P1;
+import fj.Show;
+import fj.data.*;
 import kembe.stream.*;
 
 public abstract class EventStream<A> {
@@ -48,10 +48,10 @@ public abstract class EventStream<A> {
                         return validationStreamEvent.fold(
                                 new F<Validation<E, A>, StreamEvent<A>>() {
                                     @Override public StreamEvent<A> f(Validation<E, A> as) {
-                                        if(as.isSuccess())
+                                        if (as.isSuccess())
                                             return StreamEvent.next( as.success() );
                                         else
-                                        return StreamEvent.error( new Exception(show.showS( as.fail())) );
+                                            return StreamEvent.error( new Exception( show.showS( as.fail() ) ) );
                                     }
                                 }, new F<Exception, StreamEvent<A>>() {
                                     @Override public StreamEvent<A> f(Exception e) {
@@ -69,7 +69,7 @@ public abstract class EventStream<A> {
         };
     }
 
-    public static <A, B> Split<A,B> split(final EventStream<Either<A, B>> eitherStream) {
+    public static <A, B> Split<A, B> split(final EventStream<Either<A, B>> eitherStream) {
         EventStream<A> as = eitherStream
                 .map( Functions.<A, B>left() )
                 .filter( Functions.<A>isSome() )
@@ -80,7 +80,7 @@ public abstract class EventStream<A> {
                 .filter( Functions.<B>isSome() )
                 .map( Functions.<B>getSome() );
 
-        return new Split(as,bs);
+        return new Split( as, bs );
     }
 
     public static <A> F<EventStream<A>, OpenEventStream<A>> open_(final Effect<StreamEvent<A>> handler) {
@@ -122,29 +122,62 @@ public abstract class EventStream<A> {
         return EventStream.normalize( new EitherEventStream<A, A>( one, other ) );
     }
 
-    public static <A,B> OptionalEventStream<A,B> mapOption(EventStream<A> as, F<A,Option<B>> f){
-        return new OptionalEventStream<A, B>( as,f );
+    public static <A, B> OptionNormalizingEventStream<B> mapOption(EventStream<A> as, F<A, Option<B>> f) {
+        return normalizeOption( as.map( f ) );
     }
 
-    public static <A,B> MealyEventStream<A,B> mapStateful(EventStream<A> as, State<A,B> f){
-        return new MealyEventStream<A, B>( as,f );
+    public static <A, B> ListNormalizingEventStream<B> mapList(EventStream<A> as, F<A, List<B>> f) {
+        return normalizeList( as.map( f ) );
     }
+
+    public static <A> OptionNormalizingEventStream<A> normalizeOption(EventStream<Option<A>> as) {
+        return new OptionNormalizingEventStream<>( as );
+    }
+
+    public static <A> ListNormalizingEventStream<A> normalizeList(EventStream<List<A>> as) {
+        return new ListNormalizingEventStream<>( as );
+    }
+
+    public static <A, B> MealyEventStream<A, B> mapStateful(EventStream<A> as, State<A, B> f) {
+        return new MealyEventStream<>( as, f );
+    }
+
+    public static <A, B> EventStream<B> mapOptionalStateful(EventStream<A> as, State<A, Option<B>> f) {
+        return normalizeOption( mapStateful( as, f ) );
+    }
+
+    public static <A, B> EventStream<B> mapListStateful(EventStream<A> as, State<A, List<B>> f) {
+        return normalizeList( mapStateful( as, f ) );
+    }
+
     public abstract OpenEventStream<A> open(Effect<StreamEvent<A>> effect);
 
     public FilterEventStream<A> filter(final F<A, Boolean> pred) {
-        return new FilterEventStream<A>( this, pred );
+        return new FilterEventStream<>( this, pred );
     }
 
     public <B> MappedEventStream<A, B> map(final F<A, B> f) {
-        return new MappedEventStream<A, B>( this, f );
+        return new MappedEventStream<>( this, f );
     }
 
-    public <B> OptionalEventStream<A,B> mapOption(final F<A,Option<B>> f){
+    public <B> OptionNormalizingEventStream<B> mapOption(final F<A, Option<B>> f) {
         return EventStream.mapOption( this, f );
     }
 
-    public <B> MealyEventStream<A,B> mapStateful(final State<A,B> f){
-        return EventStream.mapStateful( this,f );
+    public <B> OptionNormalizingEventStream<B> mapList(final F<A, List<B>> f) {
+        return EventStream.mapOption( this, f );
+    }
+
+    public <B> MealyEventStream<A, B> mapStateful(final State<A, B> f) {
+        return EventStream.mapStateful( this, f );
+    }
+
+    public <B> EventStream<B> mapOptionalStateful(final State<A, Option<B>> f) {
+        return EventStream.mapOptionalStateful( this, f );
+    }
+
+    public <B> EventStream<B> mapListStateful(final State<A, List<B>> f) {
+        return EventStream.mapListStateful( this, f );
     }
 
     public <B> RawMappedEventStream<A, B> rawMap(final F<StreamEvent<A>, StreamEvent<B>> f) {
