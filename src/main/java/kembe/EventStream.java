@@ -164,8 +164,8 @@ public abstract class EventStream<A> {
         return EventStream.mapOption( this, f );
     }
 
-    public <B> OptionNormalizingEventStream<B> mapList(final F<A, List<B>> f) {
-        return EventStream.mapOption( this, f );
+    public <B> ListNormalizingEventStream<B> mapList(final F<A, List<B>> f) {
+        return EventStream.mapList( this, f );
     }
 
     public <B> MealyEventStream<A, B> mapStateful(final State<A, B> f) {
@@ -181,11 +181,11 @@ public abstract class EventStream<A> {
     }
 
     public <B> RawMappedEventStream<A, B> rawMap(final F<StreamEvent<A>, StreamEvent<B>> f) {
-        return new RawMappedEventStream<A, B>( this, f );
+        return new RawMappedEventStream<>( this, f );
     }
 
     public <B> BoundEventStream<A, B> bind(F<A, EventStream<B>> f) {
-        return new BoundEventStream<A, B>( this, f );
+        return new BoundEventStream<>( this, f );
     }
 
     public <B> EitherEventStream<A, B> or(EventStream<B> other) {
@@ -197,7 +197,7 @@ public abstract class EventStream<A> {
     }
 
     public AndThenEventStream<A> andThen(EventStream<A> eventual) {
-        return new AndThenEventStream<A>( this, eventual );
+        return new AndThenEventStream<>( this, eventual );
     }
 
 
