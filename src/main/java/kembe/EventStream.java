@@ -126,6 +126,9 @@ public abstract class EventStream<A> {
         return new OptionalEventStream<A, B>( as,f );
     }
 
+    public static <A,B> MealyEventStream<A,B> mapStateful(EventStream<A> as, State<A,B> f){
+        return new MealyEventStream<A, B>( as,f );
+    }
     public abstract OpenEventStream<A> open(Effect<StreamEvent<A>> effect);
 
     public FilterEventStream<A> filter(final F<A, Boolean> pred) {
@@ -137,7 +140,11 @@ public abstract class EventStream<A> {
     }
 
     public <B> OptionalEventStream<A,B> mapOption(final F<A,Option<B>> f){
-        return EventStream.mapOption( this,f );
+        return EventStream.mapOption( this, f );
+    }
+
+    public <B> MealyEventStream<A,B> mapStateful(final State<A,B> f){
+        return EventStream.mapStateful( this,f );
     }
 
     public <B> RawMappedEventStream<A, B> rawMap(final F<StreamEvent<A>, StreamEvent<B>> f) {
@@ -160,7 +167,5 @@ public abstract class EventStream<A> {
         return new AndThenEventStream<A>( this, eventual );
     }
 
-    public <B> LeftJoinEventStream<A, B> join(EventStream<B> other) {
-        return new LeftJoinEventStream<A, B>( this, other );
-    }
+
 }

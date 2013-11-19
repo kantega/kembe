@@ -112,7 +112,7 @@ public class EventStreamFactoryMethodsTest {
 
             @Override
             public void error(Exception e) {
-                throw new RuntimeException( "SHould not happen" );
+                throw new RuntimeException( "Should not happen" );
             }
 
             @Override

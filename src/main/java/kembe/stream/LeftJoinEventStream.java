@@ -15,18 +15,16 @@ import java.util.ArrayList;
 public class LeftJoinEventStream<A, B> extends EventStream<P2<A, List<B>>> {
 
 
-    private final EventStream<A> one;
-    private final EventStream<B> other;
+    private final EventStream<Either<A,B>> source;
 
-    public LeftJoinEventStream(EventStream<A> one, EventStream<B> other) {
-        this.one = one;
-        this.other = other;
+    public LeftJoinEventStream(EventStream<Either<A,B>> source) {
+        this.source = source;
     }
 
     @Override
     public OpenEventStream<P2<A, List<B>>> open(final Effect<StreamEvent<P2<A, List<B>>>> effect) {
 
-        final Effect<StreamEvent<Either<A, B>>> eitherE =
+        OpenEventStream<Either<A,B>> abs = source.open(
                 EventStreamSubscriber.forwardTo(effect).onNext(
                         new Effect<StreamEvent.Next<Either<A, B>>>() {
 
@@ -43,15 +41,11 @@ public class LeftJoinEventStream<A, B> extends EventStream<P2<A, List<B>>> {
                                 }
 
                             }
-                        });
-
-        final OpenEventStream<A> oneO =
-                one.open(eitherE.comap(StreamEvent.lift(Either.<A, B>left_())));
-
-        final OpenEventStream<B> otherO =
-                other.open(eitherE.comap(StreamEvent.lift(Either.<A, B>right_())));
+                        }));
 
 
-        return OpenEventStream.wrap(this, List.list(oneO, otherO));
+
+
+        return OpenEventStream.wrap(this, abs);
     }
 }
