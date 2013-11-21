@@ -12,7 +12,6 @@ import kembe.sim.rand.RandomGen;
 import kembe.sim.runner.HandlerAgent;
 import org.joda.time.Instant;
 import org.joda.time.Seconds;
-import org.junit.Test;
 
 import java.util.Random;
 
@@ -76,7 +75,7 @@ public class InstantSimulatorTest {
                 }
             };
 
-    @Test
+    //@Test
     public void simple() throws InterruptedException {
 
 
