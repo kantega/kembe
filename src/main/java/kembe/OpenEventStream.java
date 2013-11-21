@@ -5,7 +5,7 @@ import fj.data.List;
 
 public abstract class OpenEventStream<A> {
 
-    public static <A> Effect<OpenEventStream<A>> close_() {
+    public static <A> Effect<OpenEventStream<A>> closeE() {
         return new Effect<OpenEventStream<A>>() {
             @Override public void e(OpenEventStream<A> openEventStream) {
                 openEventStream.close();
