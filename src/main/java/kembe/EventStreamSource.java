@@ -23,12 +23,20 @@ public class EventStreamSource<A> extends EventStream<A> {
         submit( StreamEvent.next( a ) );
     }
 
-    public void error(Exception e){
+    public void error(Exception e) {
         submit( StreamEvent.<A>error( e ) );
     }
 
-    public void done(){
+    public void done() {
         submit( StreamEvent.<A>done() );
+    }
+
+    public Effect<StreamEvent<A>> toEffect() {
+        return new Effect<StreamEvent<A>>() {
+            @Override public void e(StreamEvent<A> evt) {
+                submit( evt );
+            }
+        };
     }
 
     private void submit(StreamEvent<A> event) {
