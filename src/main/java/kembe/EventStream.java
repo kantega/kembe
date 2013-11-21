@@ -43,7 +43,7 @@ public abstract class EventStream<A> {
     public static <E, A> F<EventStream<Validation<E, A>>, EventStream<A>> normalizeValidation(final Show<E> show) {
         return new F<EventStream<Validation<E, A>>, EventStream<A>>() {
             @Override public EventStream<A> f(EventStream<Validation<E, A>> validationEventStream) {
-                return new RawMappedEventStream<Validation<E, A>, A>( validationEventStream, new F<StreamEvent<Validation<E, A>>, StreamEvent<A>>() {
+                return new RawMappedEventStream<>( validationEventStream, new F<StreamEvent<Validation<E, A>>, StreamEvent<A>>() {
                     @Override public StreamEvent<A> f(StreamEvent<Validation<E, A>> validationStreamEvent) {
                         return validationStreamEvent.fold(
                                 new F<Validation<E, A>, StreamEvent<A>>() {
