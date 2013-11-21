@@ -30,9 +30,9 @@ public class Signal {
         }
     } );
 
-    public static final Show<Signal> idShow = Show.showS( new F<Signal, String>() {
+    public static final Show<Signal> flowShow = Show.showS( new F<Signal, String>() {
         @Override public String f(Signal signal) {
-            return signal.to.id;
+            return signal.from.id +" -- " +signal.msg +" -> ";
         }
     } );
 
@@ -41,14 +41,15 @@ public class Signal {
     public static Show<Signal> chainShow = Show.show( new F<Signal, Stream<Character>>() {
         @Override public Stream<Character> f(Signal signal) {
 
-            Stream<Character> list = Shows.delimListShow( idShow, " <- " ).show( signal.toList() );
+            Stream<Character> list = Shows.delimListShow( flowShow, "" ).show( signal.toList().reverse() );
 
             return fromString( "Signal( " )
-                    .append( fromString( signal.msg + "; " ) )
                     .append( list )
-                    .append( fromString( ")" ) );
+                    .append( fromString( signal.to.id))
+                    .append( fromString( " )" ) );
         }
     } );
+
 
     public final UUID id;
 
@@ -122,5 +123,13 @@ public class Signal {
                 ", params" + params +
                 ", prev=" + prev +
                 ')';
+    }
+
+    public static F<Signal,Boolean> msgEquals(final String msg){
+        return new F<Signal, Boolean>() {
+            @Override public Boolean f(Signal signal) {
+                return signal.msg.equals( msg );
+            }
+        };
     }
 }
