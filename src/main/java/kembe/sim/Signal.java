@@ -32,7 +32,7 @@ public class Signal {
 
     public static final Show<Signal> flowShow = Show.showS( new F<Signal, String>() {
         @Override public String f(Signal signal) {
-            return signal.from.id +" -- " +signal.msg +" -> ";
+            return signal.from.id +" -[" +signal.msg +"]-> ";
         }
     } );
 
