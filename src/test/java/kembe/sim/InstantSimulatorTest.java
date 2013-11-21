@@ -9,6 +9,7 @@ import kembe.EventStreamHandler;
 import kembe.EventStreamSubscriber;
 import kembe.Time;
 import kembe.sim.rand.RandomGen;
+import kembe.sim.runner.HandlerAgent;
 import org.joda.time.Instant;
 import org.joda.time.Seconds;
 import org.junit.Test;
@@ -31,11 +32,16 @@ public class InstantSimulatorTest {
 
     private SignalHandler testDriver =
             new RandomSignalHandlerAdapter<Boolean>( oneOfTen ) {
-                @Override protected P2<SignalHandler, List<Signal>> signalRandom(Signal signal, Boolean randomValue) {
+                @Override protected P2<SignalHandler, List<Signal>> signalRandom(Signal signal, Boolean randomValue, SignalHandlerContext context) {
                     if (signal.msg.startsWith( "OK" ))
                         return p( self(), List.<Signal>nil() );
-                    else if (randomValue)
-                        return p( self(), list( signal.follow( ResourceId.fromString( "testHandler" ), Time.quantumIncrement( signal.at ), "GET to the chopper" ) ) );
+                    else
+                        return p( self(), List.<Signal>nil() );
+                }
+
+                @Override protected P2<SignalHandler, List<Signal>> tick(Tick tick, Boolean randomValue, SignalHandlerContext context) {
+                    if (randomValue)
+                        return p( self(), list( Signal.newSignal( ResourceId.fromString( "testHandler" ),  context.id,Time.quantumIncrement( tick.tickTime ), "GET to the chopper" ) ) );
                     else
                         return p( self(), List.<Signal>nil() );
                 }
@@ -43,21 +49,29 @@ public class InstantSimulatorTest {
 
     private SignalHandler testHandler =
             new NonrandomSignalHandler() {
-                @Override protected P2<SignalHandler, List<Signal>> signal(Signal signal,SignalHandlerContext context) {
+                @Override protected P2<SignalHandler, List<Signal>> signal(Signal signal, SignalHandlerContext context) {
 
                     final SignalHandler self = this;
 
                     if (signal.msg.startsWith( "GET" ))
                         return P.p( new NonrandomSignalHandler() {
 
-                            @Override protected P2<SignalHandler, List<Signal>> signal(Signal signal,SignalHandlerContext context) {
+                            @Override protected P2<SignalHandler, List<Signal>> signal(Signal signal, SignalHandlerContext context) {
                                 if (Equal.stringEqual.eq( signal.msg, "self" ))
                                     return P.p( self, list( signal.follow( ResourceId.fromString( "testDriver" ), Time.quantumIncrement( signal.at ), "OK" ) ) );
                                 else
                                     return P.p( self(), List.<Signal>nil() );
                             }
+
+                            @Override protected P2<SignalHandler, List<Signal>> tick(Tick tick, SignalHandlerContext context) {
+                                return P.p( self(), List.<Signal>nil() );
+                            }
                         }.self(), list( signal.follow( ResourceId.fromString( "testHandler" ), signal.at.plus( Seconds.ONE.toStandardDuration() ), "self" ) ) );
 
+                    return P.p( self(), List.<Signal>nil() );
+                }
+
+                @Override protected P2<SignalHandler, List<Signal>> tick(Tick tick, SignalHandlerContext context) {
                     return P.p( self(), List.<Signal>nil() );
                 }
             };
@@ -70,8 +84,8 @@ public class InstantSimulatorTest {
         Instant now = Time.now();
 
         SimulationBuilder.build()
-                .addDriver( new Agent( ResourceId.fromString( "testDriver" ), now, testDriver ) )
-                .addHandler( new Agent( ResourceId.fromString( "testHandler" ), now, testHandler ) )
+                .addHandler( new HandlerAgent( ResourceId.fromString( "testDriver" ), now, testDriver ) )
+                .addHandler( new HandlerAgent( ResourceId.fromString( "testHandler" ), now, testHandler ) )
                 .instant( now, now.plus( Seconds.seconds( 60 ).toStandardDuration() ), Seconds.ONE, r )
                 .filter( new F<Signal, Boolean>() {
                     @Override public Boolean f(Signal signal) {

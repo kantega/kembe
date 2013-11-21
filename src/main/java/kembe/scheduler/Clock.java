@@ -16,7 +16,11 @@ public abstract class Clock {
         return ticksEvery( 1, TimeUnit.SECONDS );
     }
 
-    public static EventStream<Instant> tenMillis() {
+    public static EventStream<Instant> everyHundredMillis() {
+        return ticksEvery( 10, TimeUnit.MILLISECONDS );
+    }
+
+    public static EventStream<Instant> everyTenMillis() {
         return ticksEvery( 10, TimeUnit.MILLISECONDS );
     }
 

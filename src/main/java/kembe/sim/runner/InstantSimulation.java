@@ -3,13 +3,12 @@ package kembe.sim.runner;
 import fj.*;
 import fj.control.parallel.Actor;
 import fj.control.parallel.Strategy;
-import fj.data.List;
 import kembe.EventStream;
 import kembe.OpenEventStream;
 import kembe.StreamEvent;
 import kembe.sim.ResourceId;
 import kembe.sim.Signal;
-import kembe.sim.Agent;
+import kembe.sim.Tick;
 import kembe.util.Actors;
 import org.joda.time.Instant;
 import org.joda.time.ReadablePeriod;
@@ -22,22 +21,25 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class InstantSimulation {
-    private static final Ord<SimulatedTimeRunner> simTimeRunnerOrd = Signal.signalOrd.comap( new F<SimulatedTimeRunner, Signal>() {
-        @Override public Signal f(SimulatedTimeRunner simulatedTimeRunner) {
-            return simulatedTimeRunner.signal;
+    private static final Ord<SimulatedTimeRunner> simTimeRunnerOrd = Ord.longOrd.comap( new F<SimulatedTimeRunner, Long>() {
+        @Override public Long f(SimulatedTimeRunner simulatedTimeRunner) {
+            return simulatedTimeRunner.time.getMillis();
         }
     } );
+
     private final ReadablePeriod period;
+
     private final Instant startTime;
+
     private final Instant endTime;
-    private HashMap<ResourceId, Agent> drivers;
-    private HashMap<ResourceId, Agent> handlers;
+
+    private HashMap<ResourceId, HandlerAgent> handlers;
+
     private volatile Random random;
 
 
-    public InstantSimulation(Instant startTime, Instant endTime, ReadablePeriod period, Random random, HashMap<ResourceId, Agent> drivers, HashMap<ResourceId, Agent> agents) {
+    public InstantSimulation(Instant startTime, Instant endTime, ReadablePeriod period, Random random, HashMap<ResourceId, HandlerAgent> agents) {
         this.random = random;
-        this.drivers = drivers;
         this.handlers = agents;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -47,23 +49,18 @@ public class InstantSimulation {
     private void signalTickToDrivers(final ExecutorService executor, final Actor<SimulatedTimeRunner> actor, final Effect<StreamEvent<Signal>> listener) {
 
         Instant now = startTime;
-        ArrayList<List<Signal>> ticks = new ArrayList<List<Signal>>();
+        ArrayList<Tick> ticks = new ArrayList<>();
         while (now.isBefore( endTime )) {
-            final Instant simulatedTime = now;
-            List<Signal> signals = List.iterableList( new ArrayList<ResourceId>( drivers.keySet() ) ).map( new F<ResourceId, Signal>() {
-                @Override public Signal f(ResourceId resourceId) {
-                    return Signal.newSignal( resourceId, ResourceId.fromString( "Runner" ), simulatedTime, "tick" );
-                }
-            } );
+            Tick t = new Tick( now );
             now = now.plus( period.toPeriod().toStandardDuration() );
-            ticks.add( signals );
+            ticks.add( t );
         }
 
-        for (List<Signal> signals : ticks) {
-            scheduleSignals( signals, actor, listener );
+        for (Tick tick : ticks) {
+            actor.act( sendTick( tick ,actor,listener) );
         }
-        actor.act( new SimulatedTimeRunner( Signal.newSignal( ResourceId.fromString( "*" ), ResourceId.fromString( "Runner" ), now, "Simulation terminated" ) ) {
-            @Override protected void run(Signal signal) {
+        actor.act( new SimulatedTimeRunner( now ) {
+            @Override public void run() {
                 executor.shutdownNow();
             }
         } );
@@ -78,14 +75,26 @@ public class InstantSimulation {
         }
     }
 
-    private SimulatedTimeRunner sendSignal(final Signal s, final Actor<SimulatedTimeRunner> actor, final Effect<StreamEvent<Signal>> listener) {
-        return new SimulatedTimeRunner( s ) {
-            @Override public void run(Signal signal) {
+    private SimulatedTimeRunner sendSignal(final Signal signal, final Actor<SimulatedTimeRunner> actor, final Effect<StreamEvent<Signal>> listener) {
+        return new SimulatedTimeRunner( signal.at ) {
+            @Override public void run() {
                 ResourceId id = signal.to;
-                P2<Agent, fj.data.List<Signal>> result = handlers.get( id ).signal( signal, random );
+                P2<HandlerAgent, fj.data.List<Signal>> result = handlers.get( id ).signal( signal, random );
                 handlers.put( id, result._1() );
                 scheduleSignals( result._2(), actor, listener );
                 listener.e( StreamEvent.next( signal ) );
+            }
+        };
+    }
+
+    private SimulatedTimeRunner sendTick(final Tick tick,final Actor<SimulatedTimeRunner> actor, final Effect<StreamEvent<Signal>> listener) {
+        return new SimulatedTimeRunner( tick.tickTime ) {
+            @Override public void run() {
+                for (HandlerAgent agent : handlers.values()) {
+                    P2<HandlerAgent, fj.data.List<Signal>> result = agent.tick( tick, random );
+                    handlers.put( result._1().id, result._1() );
+                    scheduleSignals( result._2(),actor,listener );
+                }
             }
         };
     }
@@ -103,9 +112,9 @@ public class InstantSimulation {
                     }
                 } );
 
-                signalTickToDrivers(service, actor, effect );
+                signalTickToDrivers( service, actor, effect );
                 try {
-                    service.awaitTermination(5, TimeUnit.MINUTES);
+                    service.awaitTermination( 5, TimeUnit.MINUTES );
                 } catch (InterruptedException e) {
                     effect.e( StreamEvent.<Signal>error( e ) );
                 }
@@ -122,16 +131,11 @@ public class InstantSimulation {
     static abstract class SimulatedTimeRunner implements Runnable {
 
 
-        public final Signal signal;
+        public final Instant time;
 
-        SimulatedTimeRunner(Signal signal) {
-            this.signal = signal;
+        SimulatedTimeRunner(Instant time) {
+            this.time = time;
         }
 
-        @Override public void run() {
-            run( signal );
-        }
-
-        protected abstract void run(Signal signal);
     }
 }

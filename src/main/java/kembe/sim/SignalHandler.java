@@ -2,6 +2,7 @@ package kembe.sim;
 
 import fj.P;
 import fj.P2;
+import fj.data.Either;
 import fj.data.List;
 
 import java.util.Random;
@@ -21,6 +22,6 @@ public abstract class SignalHandler {
         return this;
     }
 
-    public abstract P2<SignalHandler, List<Signal>> signal(Signal signal, Random random, SignalHandlerContext context);
+    public abstract P2<SignalHandler, List<Signal>> signal(Either<Tick,Signal> signal, Random random, SignalHandlerContext context);
 
 }

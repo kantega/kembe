@@ -6,22 +6,20 @@ import fj.data.List;
 import kembe.*;
 import kembe.sim.ResourceId;
 import kembe.sim.Signal;
-import kembe.sim.Agent;
+import kembe.sim.Tick;
 import org.joda.time.Instant;
 
 import java.util.*;
 
 public class RealtimeSimulation {
 
-    private volatile HashMap<ResourceId, Agent> drivers;
-    private final HashMap<ResourceId, Agent> handlers;
+    private final HashMap<ResourceId, HandlerAgent> handlers;
     private final EventStream<Instant> ticks;
     private final Random random;
 
 
-    public RealtimeSimulation(Random random, HashMap<ResourceId, Agent> drivers, HashMap<ResourceId, Agent> handlers, EventStream<Instant> ticks) {
+    public RealtimeSimulation(Random random, HashMap<ResourceId, HandlerAgent> handlers, EventStream<Instant> ticks) {
         this.random = random;
-        this.drivers = drivers;
         this.handlers = handlers;
         this.ticks = ticks;
     }
@@ -30,17 +28,15 @@ public class RealtimeSimulation {
         return new TimerTask() {
             @Override public void run() {
 
-                HashMap<ResourceId, Agent> newDrivers = new HashMap<>();
 
                 ArrayList<Signal> newSignals = new ArrayList<>();
 
-                for (Map.Entry<ResourceId, Agent> entry : drivers.entrySet()) {
-                    P2<Agent, List<Signal>> result = entry.getValue().signal( Signal.newSignal(  entry.getKey() , ResourceId.fromString( "Runner" ), instant, "tick" ), random );
-                    newDrivers.put( entry.getKey(), result._1() );
+                for (HandlerAgent  handler: handlers.values()) {
+                    P2<HandlerAgent, List<Signal>> result = handler.tick( new Tick(instant), random );
+                    handlers.put( result._1().id, result._1() );
                     newSignals.addAll( result._2().toCollection() );
                 }
 
-                drivers = newDrivers;
                 scheduleSignals( List.iterableList( newSignals ), timer,listener );
             }
         };
@@ -56,7 +52,7 @@ public class RealtimeSimulation {
         return new TimerTask() {
             @Override public void run() {
                 ResourceId id = signal.to;
-                P2<Agent, List<Signal>> result = handlers.get( id ).signal( signal, random );
+                P2<HandlerAgent, List<Signal>> result = handlers.get( id ).signal( signal, random );
                 handlers.put( id, result._1() );
                 scheduleSignals( result._2(), timer,listener );
                 listener.e( StreamEvent.next( signal ) );
