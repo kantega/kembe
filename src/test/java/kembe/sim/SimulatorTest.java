@@ -1,7 +1,6 @@
 package kembe.sim;
 
 import fj.Show;
-import fj.data.Either;
 import kembe.EventStreamHandler;
 import kembe.EventStreamSubscriber;
 import kembe.sim.rand.Rand;
@@ -16,22 +15,24 @@ import java.util.concurrent.TimeUnit;
 
 import static kembe.Time.now;
 import static kembe.sim.AgentId.idFromString;
-import static kembe.sim.Message.message;
 import static kembe.sim.RandWait.waitFor;
 import static kembe.sim.RandWait.waitForAtLeast;
+import static kembe.sim.Signal.*;
 
 public class SimulatorTest {
 
     private SimAgent testDriver =
             new SimAgent() {
-                @Override public Rand<Step> signal(Either<Signal, Message> e, SimAgentContext ctx) {
-                    if (Signal.is( "send", e ).isSome())
+                @Override public Rand<Step> act(Signal s, SimAgentContext ctx) {
+                    if (s.msg.equals( "send" ))
                         return just( send(
-                                message( AgentId.idFromString( "testHandler" ), "GET to the chopper", ctx ),
-                                event( "Request sent", ctx ) ) );
+                                signal( AgentId.idFromString( "testHandler" ), ctx.id, "GET to the chopper" ),
+                                event( "Request sent" ) ) );
 
-                    else if (Message.contains( "OK", e ).isSome())
-                        return just( sleep( waitForAtLeast( Seconds.ONE ), "retry", event( "Reply received", ctx ) ) );
+                    else if (s.msg.startsWith( "OK" ))
+                        return just( sleep(
+                                waitForAtLeast( Seconds.ONE ), "retry",
+                                event( "Reply received" ) ) );
 
                     else
                         return alt( 5, sleep( waitFor( Seconds.ONE ), "send" ) )
@@ -41,12 +42,12 @@ public class SimulatorTest {
 
     private SimAgent testHandler =
             new SimAgent() {
-                @Override public Rand<Step> signal(Either<Signal, Message> message, SimAgentContext ctx) {
-                    for (Message m : Message.contains( "GET", message ))
-                        return just( sleep( waitForAtLeast( Duration.millis( 5 ) ), "doReply", m ) );
+                @Override public Rand<Step> act(Signal signal, SimAgentContext ctx) {
+                    if (signal.msg.startsWith( "GET" ))
+                        return just( sleep( waitForAtLeast( Duration.millis( 5 ) ), "doReply", signal ) );
 
-                    for (Signal s : Signal.is( "doReply", message ))
-                        return just( send( s.msg.some().reply( "OK" ) ) );
+                    if (signal.msg.equals( "doReply" ))
+                        return just( send( signal.reply( "OK" ) ) );
 
                     return just( sleep( waitFor( Seconds.ONE ), "noop" ) );
                 }

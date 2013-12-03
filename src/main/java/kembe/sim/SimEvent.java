@@ -37,4 +37,6 @@ public class SimEvent {
     public static SimEvent newEvent(String name, AgentId source) {
         return new SimEvent( name, source, TreeMap.<String, String>empty( Ord.stringOrd ) );
     }
+
+    public static abstract class SimEventF extends F<SimAgentContext,SimEvent>{}
 }

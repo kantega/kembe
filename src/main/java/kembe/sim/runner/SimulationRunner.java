@@ -2,8 +2,6 @@ package kembe.sim.runner;
 
 import fj.Effect;
 import fj.F;
-import fj.Show;
-import fj.data.Either;
 import fj.data.List;
 import kembe.EventStream;
 import kembe.OpenEventStream;
@@ -11,7 +9,6 @@ import kembe.StreamEvent;
 import kembe.Time;
 import kembe.sim.*;
 import kembe.sim.rand.Rand;
-import kembe.util.Shows;
 import org.joda.time.Instant;
 
 import java.util.HashMap;
@@ -38,14 +35,14 @@ public class SimulationRunner {
         this.scheduler = scheduler;
     }
 
-    public EventStream<Timed<SimEvent>> eventStream(final List<AgentInvocation> startSignals) {
+    public EventStream<Timed<SimEvent>> eventStream(final List<Signal> startSignals) {
         return new EventStream<Timed<SimEvent>>() {
             @Override public OpenEventStream<Timed<SimEvent>> open(final Effect<StreamEvent<Timed<SimEvent>>> effect) {
 
                 scheduler.scheduleAt( startTime, new SchedulerTask() {
                     @Override public void run(Instant time) {
                         startSignals
-                                .map( Timed.<AgentInvocation>timed( startTime ) )
+                                .map( Timed.<Signal>timed( startTime ) )
                                 .map( scheduleTask( effect ) )
                                 .foreach( scheduler.toEffect() );
                     }
@@ -68,24 +65,18 @@ public class SimulationRunner {
         };
     }
 
-    private Step invokeAgent(Timed<AgentInvocation> invocation) {
-        final AgentInvocation invocationData =
-                invocation.value;
+    private Step invokeAgent(final SimAgentContext context, Timed<Signal> timedSignal) {
+        final Signal signal =
+                timedSignal.value;
 
         final AgentId id =
-                invocationData.id;
-
-        final Instant timestamp =
-                invocation.time;
+                signal.to;
 
         final SimAgent agent =
                 agents.get( id );
 
-        final SimAgentContext context =
-                new SimAgentContext( id, timestamp );
-
         final Rand<Step> steps =
-                agent.signal( invocationData.payload, context );
+                agent.act( signal, context );
 
         final Step step =
                 steps.next( random );
@@ -93,23 +84,23 @@ public class SimulationRunner {
         return step;
     }
 
-    private List<Timed<AgentInvocation>> getNextInvocations(final AgentId id, final Instant timestamp, Step step) {
+    private List<Timed<Signal>> getNextInvocations(final SimAgentContext ctx, Step step) {
         return step.action
                 .either(
-                        new F<SignalSchedule, List<Timed<AgentInvocation>>>() {
-                            @Override public List<Timed<AgentInvocation>> f(SignalSchedule signalOccurring) {
+                        new F<SignalSchedule, List<Timed<Signal>>>() {
+                            @Override public List<Timed<Signal>> f(SignalSchedule signalOccurring) {
                                 return List.single(
                                         new Timed<>(
-                                                signalOccurring.randomSleep.after( timestamp ).next( random ),
-                                                new AgentInvocation( id, Either.<Signal, Message>left( signalOccurring.value ) ) ) );
+                                                signalOccurring.randomSleep.after( ctx.currentTime ).next( random ),
+                                                signalOccurring.value.f(ctx) ) );
                             }
-                        }, new F<List<Message>, List<Timed<AgentInvocation>>>() {
-                            @Override public List<Timed<AgentInvocation>> f(List<Message> messages) {
-                                return messages.map( new F<Message, Timed<AgentInvocation>>() {
-                                    @Override public Timed<AgentInvocation> f(Message message) {
+                        }, new F<List<Signal>, List<Timed<Signal>>>() {
+                            @Override public List<Timed<Signal>> f(List<Signal> messages) {
+                                return messages.map( new F<Signal, Timed<Signal>>() {
+                                    @Override public Timed<Signal> f(Signal signal) {
                                         return new Timed<>(
-                                                Time.quantumIncrement( timestamp ),
-                                                new AgentInvocation( message.to, Either.<Signal, Message>right( message ) ) );
+                                                Time.quantumIncrement( ctx.currentTime ),
+                                                 signal );
                                     }
                                 } );
                             }
@@ -117,9 +108,9 @@ public class SimulationRunner {
                 );
     }
 
-    private F<Timed<AgentInvocation>, Timed<SchedulerTask>> scheduleTask(final Effect<StreamEvent<Timed<SimEvent>>> listener) {
-        return new F<Timed<AgentInvocation>, Timed<SchedulerTask>>() {
-            @Override public Timed<SchedulerTask> f(Timed<AgentInvocation> agentInvocationTimed) {
+    private F<Timed<Signal>, Timed<SchedulerTask>> scheduleTask(final Effect<StreamEvent<Timed<SimEvent>>> listener) {
+        return new F<Timed<Signal>, Timed<SchedulerTask>>() {
+            @Override public Timed<SchedulerTask> f(Timed<Signal> agentInvocationTimed) {
                 return new Timed<SchedulerTask>( agentInvocationTimed.time, new ScheduleInvocation( listener, agentInvocationTimed ) );
             }
         };
@@ -129,31 +120,33 @@ public class SimulationRunner {
 
         final Effect<StreamEvent<Timed<SimEvent>>> listener;
 
-        final Timed<AgentInvocation> invocation;
+        final Timed<Signal> signal;
 
-        ScheduleInvocation(Effect<StreamEvent<Timed<SimEvent>>> listener, Timed<AgentInvocation> invocation) {
+        ScheduleInvocation(Effect<StreamEvent<Timed<SimEvent>>> listener, Timed<Signal> signal) {
             this.listener = listener;
-            this.invocation = invocation;
+            this.signal = signal;
         }
 
         @Override public void run(final Instant time) {
-            Step step = invokeAgent( invocation );
+            final SimAgentContext context =
+                    new SimAgentContext( signal.value.to,signal.time );
+            Step step = invokeAgent(context, signal );
 
-            step.emittedEvents.foreach( new Effect<SimEvent>() {
-                @Override public void e(SimEvent simEvent) {
-                    listener.e( StreamEvent.next( new Timed<>( time, simEvent ) ) );
+            step.emittedEvents.foreach( new Effect<SimEvent.SimEventF>() {
+                @Override public void e(SimEvent.SimEventF simEvent) {
+                    listener.e( StreamEvent.next( new Timed<>( time, simEvent.f( context ) ) ) );
                 }
             } );
 
-            List<Timed<AgentInvocation>> invocations = getNextInvocations( invocation.value.id, time, step );
+            List<Timed<Signal>> invocations = getNextInvocations( context, step );
             invocations
-                    .filter( Timed.<AgentInvocation>isBeforeOrEqual( endTime ) )
+                    .filter( Timed.<Signal>isBeforeOrEqual( endTime ) )
                     .map( scheduleTask( listener ) )
                     .foreach( scheduler.toEffect() );
         }
 
         public String toString() {
-            return "ScheduledInvocation of "+ invocation.value.id+" "+ Show.eitherShow( Shows.<Signal>reflectionShow(), Shows.<Message>reflectionShow() ).showS( invocation.value.payload );
+            return "ScheduledInvocation of "+ signal.value.id+" "+  Signal.detailShow.showS( signal.value );
         }
     }
 

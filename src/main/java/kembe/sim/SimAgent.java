@@ -1,6 +1,5 @@
 package kembe.sim;
 
-import fj.data.Either;
 import fj.data.List;
 import kembe.sim.rand.Rand;
 import kembe.sim.stat.Draw;
@@ -20,26 +19,31 @@ public abstract class SimAgent {
         return Draw.only( step );
     }
 
-    protected Step sleep(RandWait sleep, String name, SimEvent... events) {
+    protected Step sleep(RandWait sleep, String name, SimEvent.SimEventF... events) {
         return Step.sleep( sleep, name, this ).emit( List.list( events ) );
     }
 
-    protected Step sleep(RandWait sleep, String name, Message msg, SimEvent... events) {
-        return Step.sleep( sleep, name, msg, this ).emit( List.list( events ) );
+    protected Step sleep(RandWait sleep, String name, Signal prev, SimEvent.SimEventF... events) {
+        return Step.sleep( sleep, name,prev, this ).emit( List.list( events ) );
     }
 
-    protected Step send(List<Message> msgs) {
+    protected Step send(List<Signal> msgs) {
         return Step.send( msgs, this );
     }
 
-    protected Step send(Message msg, SimEvent... events) {
+    protected Step send(Signal msg, SimEvent.SimEventF... events) {
         return send( List.single( msg ) ).emit( List.list( events ) );
     }
 
-    protected SimEvent event(String name, SimAgentContext ctx) {
-        return SimEvent.newEvent( name, ctx.id );
+    protected SimEvent.SimEventF event(final String name) {
+        return new SimEvent.SimEventF() {
+            @Override public SimEvent f(SimAgentContext ctx) {
+                return SimEvent.newEvent( name, ctx.id );
+            }
+        };
+
     }
 
-    public abstract Rand<Step> signal(Either<Signal, Message> message, SimAgentContext context);
+    public abstract Rand<Step> act(Signal message, SimAgentContext context);
 
 }
