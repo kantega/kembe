@@ -81,7 +81,7 @@ public class SimulatorTest {
         l.await( 5,TimeUnit.HOURS );
     }
 
-    @Test
+    //@Test
     public void realtime() throws InterruptedException {
 
 
