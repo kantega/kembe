@@ -96,11 +96,11 @@ public class SimulationRunner {
     private List<Timed<AgentInvocation>> getNextInvocations(final AgentId id, final Instant timestamp, Step step) {
         return step.action
                 .either(
-                        new F<Occurring<Signal>, List<Timed<AgentInvocation>>>() {
-                            @Override public List<Timed<AgentInvocation>> f(Occurring<Signal> signalOccurring) {
+                        new F<SignalSchedule, List<Timed<AgentInvocation>>>() {
+                            @Override public List<Timed<AgentInvocation>> f(SignalSchedule signalOccurring) {
                                 return List.single(
                                         new Timed<>(
-                                                signalOccurring.randomTime.next( random ),
+                                                signalOccurring.randomSleep.after( timestamp ).next( random ),
                                                 new AgentInvocation( id, Either.<Signal, Message>left( signalOccurring.value ) ) ) );
                             }
                         }, new F<List<Message>, List<Timed<AgentInvocation>>>() {

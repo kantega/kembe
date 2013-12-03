@@ -4,8 +4,8 @@ import fj.Show;
 import fj.data.Either;
 import kembe.EventStreamHandler;
 import kembe.EventStreamSubscriber;
-import kembe.Time;
 import kembe.sim.rand.Rand;
+import org.joda.time.Duration;
 import org.joda.time.Instant;
 import org.joda.time.Seconds;
 import org.junit.Test;
@@ -16,26 +16,26 @@ import java.util.concurrent.TimeUnit;
 
 import static kembe.Time.now;
 import static kembe.sim.AgentId.idFromString;
-import static kembe.sim.Message.newMessage;
-import static kembe.sim.Occurring.at;
-import static kembe.sim.Occurring.within;
+import static kembe.sim.Message.message;
+import static kembe.sim.RandWait.waitFor;
+import static kembe.sim.RandWait.waitForAtLeast;
 
 public class SimulatorTest {
 
     private SimAgent testDriver =
             new SimAgent() {
-                @Override public Rand<Step> signal(Either<Signal, Message> message, SimAgentContext ctx) {
-                    if (Signal.is( "send", message ).isSome())
+                @Override public Rand<Step> signal(Either<Signal, Message> e, SimAgentContext ctx) {
+                    if (Signal.is( "send", e ).isSome())
                         return just( send(
-                                newMessage( AgentId.idFromString( "testHandler" ), "GET to the chopper", ctx ),
+                                message( AgentId.idFromString( "testHandler" ), "GET to the chopper", ctx ),
                                 event( "Request sent", ctx ) ) );
 
-                    else if (Message.contains( "OK", message ).isSome())
-                        return just( sleep( within( ctx.currentTime, Seconds.ONE ), "retry", event( "Reply received", ctx ) ) );
+                    else if (Message.contains( "OK", e ).isSome())
+                        return just( sleep( waitForAtLeast( Seconds.ONE ), "retry", event( "Reply received", ctx ) ) );
 
                     else
-                        return alt( 5, sleep( within( ctx.currentTime, Seconds.ONE ), "send" ) )
-                                .or( 5, sleep( at( Time.plus( ctx.currentTime, Seconds.ONE ) ), "retry" ) );
+                        return alt( 5, sleep( waitFor( Seconds.ONE ), "send" ) )
+                                .or( 5, sleep( waitFor( Seconds.ONE ), "retry" ) );
                 }
             };
 
@@ -43,12 +43,12 @@ public class SimulatorTest {
             new SimAgent() {
                 @Override public Rand<Step> signal(Either<Signal, Message> message, SimAgentContext ctx) {
                     for (Message m : Message.contains( "GET", message ))
-                        return just( sleep( Occurring.withinMillis( ctx.currentTime, 5 ), "doReply", m ) );
+                        return just( sleep( waitForAtLeast( Duration.millis( 5 ) ), "doReply", m ) );
 
                     for (Signal s : Signal.is( "doReply", message ))
                         return just( send( s.msg.some().reply( "OK" ) ) );
 
-                    return just( sleep( at( Time.plus( ctx.currentTime, Seconds.ONE ) ), "noop" ) );
+                    return just( sleep( waitFor( Seconds.ONE ), "noop" ) );
                 }
             };
 
@@ -78,7 +78,7 @@ public class SimulatorTest {
                         l.countDown();
                     }
                 } ) );
-        l.await( 5,TimeUnit.HOURS );
+        l.await( 5, TimeUnit.HOURS );
     }
 
     //@Test

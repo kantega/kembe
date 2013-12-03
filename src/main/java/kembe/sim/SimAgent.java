@@ -4,7 +4,6 @@ import fj.data.Either;
 import fj.data.List;
 import kembe.sim.rand.Rand;
 import kembe.sim.stat.Draw;
-import org.joda.time.Instant;
 
 public abstract class SimAgent {
 
@@ -21,12 +20,12 @@ public abstract class SimAgent {
         return Draw.only( step );
     }
 
-    protected Step sleep(Rand<Instant> occurence, String name, SimEvent... events) {
-        return Step.sleep( occurence, name, this ).emit( List.list( events ) );
+    protected Step sleep(RandWait sleep, String name, SimEvent... events) {
+        return Step.sleep( sleep, name, this ).emit( List.list( events ) );
     }
 
-    protected Step sleep(Rand<Instant> occurence, String name, Message msg, SimEvent... events) {
-        return Step.sleep( occurence, name, msg, this ).emit( List.list( events ) );
+    protected Step sleep(RandWait sleep, String name, Message msg, SimEvent... events) {
+        return Step.sleep( sleep, name, msg, this ).emit( List.list( events ) );
     }
 
     protected Step send(List<Message> msgs) {

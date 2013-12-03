@@ -68,16 +68,16 @@ public class Message {
         this.params = params;
     }
 
-    public static Message newMessage(AgentId to, String msg, SimAgentContext ctx) {
+    public static Message message(AgentId to, String msg, SimAgentContext ctx) {
         return new Message( UUID.randomUUID(), to, ctx.id, msg, Option.<Message>none(), TreeMap.<String, String>empty( Ord.stringOrd ) );
     }
 
-    public static Message newMessageFollowing(Message previous, AgentId to, String msg) {
+    public static Message messageFollowing(Message previous, AgentId to, String msg) {
         return new Message( UUID.randomUUID(), to, previous.to, msg, Option.some( previous ), TreeMap.<String, String>empty( Ord.stringOrd ) );
     }
 
     public static Message reply(Message previous, String msg) {
-        return newMessageFollowing( previous, previous.from, msg );
+        return messageFollowing( previous, previous.from, msg );
     }
 
     public static F<Message, Boolean> msgEquals(final String msg) {
@@ -103,7 +103,7 @@ public class Message {
     }
 
     public Message follow(AgentId to, String msg) {
-        return Message.newMessageFollowing( this, to, msg );
+        return Message.messageFollowing( this, to, msg );
     }
 
     public TreeMap<String, String> allParams() {
