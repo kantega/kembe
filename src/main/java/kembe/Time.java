@@ -35,7 +35,7 @@ public class Time {
         return new Instant( System.currentTimeMillis() );
     }
 
-    public static Instant plus(ReadableInstant instant, ReadablePeriod period){
+    public static Instant plus(ReadableInstant instant, ReadablePeriod period) {
         return instant.toInstant().plus( period.toPeriod().toStandardDuration() );
     }
 
@@ -44,19 +44,19 @@ public class Time {
     }
 
     public static Rand<Duration> randomDuration(final Duration min, final Duration max) {
-       final long diff = Math.abs(max.getMillis() - min.getMillis());
+        final long diff = Math.abs( max.getMillis() - min.getMillis() );
 
-        if(diff>Integer.MAX_VALUE)
+        if (diff > Integer.MAX_VALUE)
             return new Rand<Duration>() {
                 @Override public Duration next(Random t) {
-                    int r = t.nextInt( (int)diff/60/1000 );
+                    int r = t.nextInt( (int) diff / 60 / 1000 );
                     return min.plus( r * 60 * 1000 );
                 }
             };
         else
             return new Rand<Duration>() {
                 @Override public Duration next(Random t) {
-                    int r = t.nextInt( (int)diff );
+                    int r = t.nextInt( (int) diff );
                     return min.plus( r );
                 }
             };
@@ -68,6 +68,14 @@ public class Time {
 
     public static DateTime nextMidnightAfter(ReadableInstant instant) {
         return instant.toInstant().toDateTime().toDateMidnight().toDateTime().plusDays( 1 );
+    }
+
+    public static DateTime next(LocalTime time, Instant instant) {
+        DateTime dt = instant.toDateTime().withFields( time );
+
+        return dt.isAfter( instant )
+               ? dt
+               : dt.plusDays( 1 );
     }
 
     public static class IntervalBuilder {
