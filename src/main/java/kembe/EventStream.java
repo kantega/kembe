@@ -6,6 +6,9 @@ import fj.P1;
 import fj.Show;
 import fj.data.*;
 import kembe.stream.*;
+import kembe.util.Functions;
+import kembe.util.Split;
+
 
 public abstract class EventStream<A> {
 

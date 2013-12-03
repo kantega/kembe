@@ -1,8 +1,9 @@
-package kembe;
+package kembe.util;
 
 import fj.F;
 import fj.P;
 import fj.P2;
+import kembe.EventStream;
 
 public class Split<A, B> {
 

@@ -19,6 +19,14 @@ public abstract class StreamEvent<A> {
         return new Next<A>(value);
     }
 
+    public static <A> F<A,Next<A>> next(){
+        return new F<A, Next<A>>() {
+            @Override public Next<A> f(A a) {
+                return next(a);
+            }
+        };
+    }
+
     public static <A> Error<A> error(Exception e){
         return new Error<A>(e);
     }

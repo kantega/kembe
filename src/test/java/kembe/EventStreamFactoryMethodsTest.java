@@ -6,6 +6,7 @@ import fj.Show;
 import fj.data.Either;
 import fj.data.Stream;
 import fj.function.Integers;
+import kembe.util.Split;
 import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;

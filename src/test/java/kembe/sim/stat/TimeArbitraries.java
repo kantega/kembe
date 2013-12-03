@@ -2,8 +2,6 @@ package kembe.sim.stat;
 
 import fj.F;
 import fj.F2;
-import fj.F3;
-import fj.Function;
 import fj.test.Arbitrary;
 import fj.test.Gen;
 import kembe.sim.rand.DoubleFromZeroIncToOne;
@@ -25,14 +23,6 @@ public class TimeArbitraries {
             return new Probability( new DoubleFromZeroIncToOne( ((double)d)/1000000 ) );
         }
     } ) );
-
-    public static final Arbitrary<OccurenceProbability> arbTimeRangeOP =
-            Arbitrary.arbitrary( arbProbability.gen.bind( arbLocalTime.gen, arbLocalTime.gen, Function.curry( new F3<Probability, LocalTime, LocalTime, OccurenceProbability>() {
-                @Override public OccurenceProbability f(Probability probability, LocalTime from, LocalTime to) {
-                    return OccurenceProbability.inRange( from,to,probability );
-                }
-            } ) ) );
-
 
 
     public static Arbitrary<Duration> arbDuration(final Duration min, final Duration max) {

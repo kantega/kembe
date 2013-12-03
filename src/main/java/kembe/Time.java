@@ -2,7 +2,7 @@ package kembe;
 
 import fj.F;
 import fj.Ord;
-import kembe.sim.rand.RandomGen;
+import kembe.sim.rand.Rand;
 import org.joda.time.*;
 
 import java.util.Random;
@@ -35,22 +35,26 @@ public class Time {
         return new Instant( System.currentTimeMillis() );
     }
 
+    public static Instant plus(ReadableInstant instant, ReadablePeriod period){
+        return instant.toInstant().plus( period.toPeriod().toStandardDuration() );
+    }
+
     public static IntervalBuilder from(ReadableInstant instant) {
         return new IntervalBuilder( instant );
     }
 
-    public static RandomGen<Duration> randomDuration(final Duration min, final Duration max) {
+    public static Rand<Duration> randomDuration(final Duration min, final Duration max) {
        final long diff = Math.abs(max.getMillis() - min.getMillis());
 
         if(diff>Integer.MAX_VALUE)
-            return new RandomGen<Duration>() {
+            return new Rand<Duration>() {
                 @Override public Duration next(Random t) {
                     int r = t.nextInt( (int)diff/60/1000 );
                     return min.plus( r * 60 * 1000 );
                 }
             };
         else
-            return new RandomGen<Duration>() {
+            return new Rand<Duration>() {
                 @Override public Duration next(Random t) {
                     int r = t.nextInt( (int)diff );
                     return min.plus( r );
@@ -60,6 +64,10 @@ public class Time {
 
     public static DateTime midnightBefore(ReadableInstant instant) {
         return instant.toInstant().toDateTime().toDateMidnight().toDateTime();
+    }
+
+    public static DateTime nextMidnightAfter(ReadableInstant instant) {
+        return instant.toInstant().toDateTime().toDateMidnight().toDateTime().plusDays( 1 );
     }
 
     public static class IntervalBuilder {

@@ -1,14 +1,16 @@
 package kembe.sim.stat;
 
-import fj.*;
+import fj.Equal;
+import fj.F;
+import fj.Ord;
 import kembe.sim.rand.DoubleFromZeroIncToOne;
-import kembe.sim.rand.RandomGen;
+import kembe.sim.rand.Rand;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Random;
 
-public class Probability extends RandomGen<Boolean> {
+public class Probability extends Rand<Boolean> {
 
     public static final Probability one = new Probability( DoubleFromZeroIncToOne.one );
 
@@ -53,7 +55,7 @@ public class Probability extends RandomGen<Boolean> {
     }
 
     @Override public Boolean next(final Random r) {
-        return RandomGen.randomDouble().map( new F<DoubleFromZeroIncToOne, Boolean>() {
+        return Rand.randomDouble().map( new F<DoubleFromZeroIncToOne, Boolean>() {
             @Override public Boolean f(DoubleFromZeroIncToOne doubleFromZeroIncToOne) {
                 return test( doubleFromZeroIncToOne );
             }

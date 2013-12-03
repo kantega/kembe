@@ -9,7 +9,6 @@ public abstract class State<A,B> {
         return this;
     }
 
-
     public static class Transition<A,B>{
         public final B result;
         public final State<A,B> nextState;

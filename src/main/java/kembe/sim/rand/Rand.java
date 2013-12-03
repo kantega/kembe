@@ -6,15 +6,15 @@ import fj.data.List;
 import java.util.ArrayList;
 import java.util.Random;
 
-public abstract class RandomGen<A> {
+public abstract class Rand<A> {
 
     /**
      * Random int in the range[Integer.MIN_VALUE,Integer.MAX_VALUE]
      *
      * @return
      */
-    public static RandomGen<AnyInteger> randomInt() {
-        return new RandomGen<AnyInteger>() {
+    public static Rand<AnyInteger> randomInt() {
+        return new Rand<AnyInteger>() {
             @Override public AnyInteger next(Random t) {
                 return new AnyInteger( t.nextInt() );
             }
@@ -26,8 +26,8 @@ public abstract class RandomGen<A> {
      *
      * @return
      */
-    public static RandomGen<AnyLong> randomLong() {
-        return new RandomGen<AnyLong>() {
+    public static Rand<AnyLong> randomLong() {
+        return new Rand<AnyLong>() {
             @Override public AnyLong next(Random t) {
                 return new AnyLong( t.nextLong() );
             }
@@ -39,8 +39,8 @@ public abstract class RandomGen<A> {
      *
      * @return
      */
-    public static RandomGen<DoubleFromZeroIncToOne> randomDouble() {
-        return new RandomGen<DoubleFromZeroIncToOne>() {
+    public static Rand<DoubleFromZeroIncToOne> randomDouble() {
+        return new Rand<DoubleFromZeroIncToOne>() {
             @Override public DoubleFromZeroIncToOne next(Random t) {
                 return  new DoubleFromZeroIncToOne( t.nextDouble() );
             }
@@ -52,8 +52,8 @@ public abstract class RandomGen<A> {
      *
      * @return
      */
-    public static RandomGen<AnyDouble> randomGaussDouble() {
-        return new RandomGen<AnyDouble>() {
+    public static Rand<AnyDouble> randomGaussDouble() {
+        return new Rand<AnyDouble>() {
             @Override public AnyDouble next(Random t) {
                 return new AnyDouble( t.nextDouble() );
             }
@@ -67,7 +67,7 @@ public abstract class RandomGen<A> {
      * @param <T>
      * @return
      */
-    public static <T> RandomGen<T> oneOf(final T... ts) {
+    public static <T> Rand<T> oneOf(final T... ts) {
         return oneOf( List.list( ts ) );
     }
 
@@ -78,7 +78,7 @@ public abstract class RandomGen<A> {
      * @param <T>
      * @return
      */
-    public static <T> RandomGen<T> oneOf(final List<T> ts) {
+    public static <T> Rand<T> oneOf(final List<T> ts) {
         final ArrayList<T> copy = new ArrayList(ts.toCollection());
 
         return randomInt( 0, ts.length() ).map( new F<Integer, T>() {
@@ -101,9 +101,9 @@ public abstract class RandomGen<A> {
      * @param to
      * @return
      */
-    public static RandomGen<Integer> randomInt(final int from, final int to) {
+    public static Rand<Integer> randomInt(final int from, final int to) {
 
-        return new RandomGen<Integer>() {
+        return new Rand<Integer>() {
             @Override public Integer next(Random t) {
                 int min = Math.min( from, to );
                 int max = Math.max( from, to );
@@ -115,18 +115,18 @@ public abstract class RandomGen<A> {
 
     public abstract A next(Random t);
 
-    public <B> RandomGen<B> map(final F<A, B> f) {
-        return new RandomGen<B>() {
+    public <B> Rand<B> map(final F<A, B> f) {
+        return new Rand<B>() {
             @Override public B next(Random t) {
-                return f.f(RandomGen.this.next( t ));
+                return f.f(Rand.this.next( t ));
             }
         };
     }
 
-    public <B> RandomGen<B> bind(final F<A, RandomGen<B>> f) {
-        return new RandomGen<B>() {
+    public <B> Rand<B> bind(final F<A, Rand<B>> f) {
+        return new Rand<B>() {
             @Override public B next(Random t) {
-                A r = RandomGen.this.next( t );
+                A r = Rand.this.next( t );
                 return f.f( r ).next( t );
             }
         };

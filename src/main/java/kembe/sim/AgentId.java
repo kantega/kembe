@@ -2,21 +2,21 @@ package kembe.sim;
 
 import fj.F;
 
-public class ResourceId {
+public class AgentId {
 
     public final String id;
 
-    public ResourceId(String id) {
+    public AgentId(String id) {
         this.id = id;
     }
 
-    public static ResourceId fromString(String id){
-        return new ResourceId( id );
+    public static AgentId idFromString(String id){
+        return new AgentId( id );
     }
 
-    public static F<String,ResourceId> fromString = new F<String, ResourceId>() {
-        @Override public ResourceId f(String s) {
-            return ResourceId.fromString( s );
+    public static F<String,AgentId> fromString = new F<String, AgentId>() {
+        @Override public AgentId f(String s) {
+            return AgentId.idFromString( s );
         }
     };
 
@@ -25,7 +25,7 @@ public class ResourceId {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ResourceId that = (ResourceId) o;
+        AgentId that = (AgentId) o;
 
         if (!id.equals( that.id )) return false;
 
@@ -38,6 +38,6 @@ public class ResourceId {
     }
 
     @Override public String toString() {
-        return "ResourceId( " + id +" )";
+        return "AgentId( " + id +" )";
     }
 }
