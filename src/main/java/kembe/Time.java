@@ -78,6 +78,9 @@ public class Time {
                : dt.plusDays( 1 );
     }
 
+    public static LocalTime timeOfDay(int hours, int seconds) {
+        return new LocalTime( hours, seconds );
+    }
 
     public static class IntervalBuilder {
 
