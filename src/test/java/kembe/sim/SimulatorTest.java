@@ -55,7 +55,6 @@ public class SimulatorTest {
     @Test
     public void instant() throws InterruptedException {
 
-
         Random r = new Random( 2 );
         Instant now = now();
         final CountDownLatch l = new CountDownLatch( 1 );
@@ -83,7 +82,6 @@ public class SimulatorTest {
 
     //@Test
     public void realtime() throws InterruptedException {
-
 
         Random r = new Random( 2 );
         Instant now = now();

@@ -56,7 +56,7 @@ public abstract class RandWait {
     }
 
     public static RandWait waitFor(final ReadablePeriod p){
-        return waitFor( p.toPeriod() );
+        return waitFor( p.toPeriod().toStandardDuration() );
     }
 
     public static RandWait waitForBetween(final Duration min, final Duration max) {
@@ -75,7 +75,7 @@ public abstract class RandWait {
         };
     }
     public static RandWait waitForAtLeast(final ReadablePeriod p){
-        return waitForAtLeast( p.toPeriod() );
+        return waitForAtLeast( p.toPeriod().toStandardDuration() );
     }
 
     private static Rand<Instant> within(final Interval interval) {

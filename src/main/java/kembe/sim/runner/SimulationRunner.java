@@ -145,7 +145,8 @@ public class SimulationRunner {
                 }
             } );
 
-            getNextInvocations( invocation.value.id, time, step )
+            List<Timed<AgentInvocation>> invocations = getNextInvocations( invocation.value.id, time, step );
+            invocations
                     .filter( Timed.<AgentInvocation>isBeforeOrEqual( endTime ) )
                     .map( scheduleTask( listener ) )
                     .foreach( scheduler.toEffect() );
