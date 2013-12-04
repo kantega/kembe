@@ -78,7 +78,7 @@ public class SimulatorTest {
                         l.countDown();
                     }
                 } ) );
-        l.await( 5, TimeUnit.HOURS );
+        l.await( 5, TimeUnit.SECONDS );
     }
 
     //@Test
