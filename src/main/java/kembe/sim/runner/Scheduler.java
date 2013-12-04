@@ -4,9 +4,9 @@ import fj.*;
 import fj.control.parallel.Actor;
 import fj.control.parallel.Strategy;
 import kembe.sim.Timed;
+import kembe.util.Order;
 import org.joda.time.Instant;
 
-import java.util.Comparator;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -55,7 +55,7 @@ public abstract class Scheduler {
 
             AtomicLong atomicLong = new AtomicLong( 0 );
 
-            ConcurrentSkipListSet<Numbered<T>> mbox = new ConcurrentSkipListSet<>( toComparator( numberedOrd( ord ) ) );
+            ConcurrentSkipListSet<Numbered<T>> mbox = new ConcurrentSkipListSet<>( Order.toComparator( numberedOrd( ord ) ) );
             // Product so the actor can use its strategy (to act on messages in other threads,
             // to handle exceptions, etc.)
             P1<Unit> processor = new P1<Unit>() {
@@ -93,19 +93,7 @@ public abstract class Scheduler {
         } );
     }
 
-    private static <A> Comparator<A> toComparator(final Ord<A> ord) {
-        return new Comparator<A>() {
-            @Override public int compare(A o1, A o2) {
-                Ordering o = ord.compare( o1, o2 );
-                if (o.equals( Ordering.LT ))
-                    return -1;
-                else if (o.equals( Ordering.EQ ))
-                    return 0;
-                else
-                    return 1;
-            }
-        };
-    }
+
 
     public void schedule(Timed<SchedulerTask> timedT) {
         scheduleAt( timedT.time, timedT.value );
