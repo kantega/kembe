@@ -38,7 +38,9 @@ public abstract class RandWait {
     public static RandWait waitUntilBetween(final LocalTime from, final LocalTime to) {
         return new RandWait() {
             @Override public Rand<Instant> after(final Instant instant) {
-                return within( Time.from( Time.next( from, instant ) ).until( Time.next( to, instant ) ) );
+                Duration duration = Time.from(from.toDateTime( instant )).until( to.toDateTime( instant ) ).toDuration();
+
+                return within( Time.from( Time.next( from, instant ) ).lasting( duration ) );
             }
         };
     }
