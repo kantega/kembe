@@ -131,6 +131,9 @@ public class SimulationRunner {
             final SimAgentContext context =
                     new SimAgentContext( signal.value.to,signal.time );
             Step step = invokeAgent(context, signal );
+            List<Timed<Signal>> invocations = getNextInvocations( context, step );
+
+            agents.put(context.id,step.nextHandler);
 
             step.emittedEvents.foreach( new Effect<SimEvent.SimEventF>() {
                 @Override public void e(SimEvent.SimEventF simEvent) {
@@ -138,7 +141,6 @@ public class SimulationRunner {
                 }
             } );
 
-            List<Timed<Signal>> invocations = getNextInvocations( context, step );
             invocations
                     .filter( Timed.<Signal>isBeforeOrEqual( endTime ) )
                     .map( scheduleTask( listener ) )
