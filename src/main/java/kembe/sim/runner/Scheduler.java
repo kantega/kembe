@@ -60,6 +60,7 @@ public abstract class Scheduler {
             // to handle exceptions, etc.)
             P1<Unit> processor = new P1<Unit>() {
                 @Override public Unit _1() {
+                    try{
                     // get next item from queue
                     Numbered<T> a = mbox.pollFirst();
                     // if there is one, process it
@@ -73,6 +74,9 @@ public abstract class Scheduler {
                         suspended.set( true );
                         // work again, in case someone else queued up a message while we were holding the lock
                         work();
+                    }
+                    }catch (Exception e){
+                        e.printStackTrace();//Nothing else to do here
                     }
                     return Unit.unit();
                 }
