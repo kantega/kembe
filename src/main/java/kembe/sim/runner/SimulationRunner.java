@@ -92,7 +92,7 @@ public class SimulationRunner {
                                 return List.single(
                                         new Timed<>(
                                                 signalOccurring.randomSleep.after( ctx.currentTime ).next( random ),
-                                                signalOccurring.value.f(ctx) ) );
+                                                signalOccurring.value.f( ctx ) ) );
                             }
                         }, new F<List<Signal>, List<Timed<Signal>>>() {
                             @Override public List<Timed<Signal>> f(List<Signal> messages) {
@@ -100,7 +100,7 @@ public class SimulationRunner {
                                     @Override public Timed<Signal> f(Signal signal) {
                                         return new Timed<>(
                                                 Time.quantumIncrement( ctx.currentTime ),
-                                                 signal );
+                                                signal );
                                     }
                                 } );
                             }
@@ -128,27 +128,37 @@ public class SimulationRunner {
         }
 
         @Override public void run(final Instant time) {
-            final SimAgentContext context =
-                    new SimAgentContext( signal.value.to,signal.time );
-            Step step = invokeAgent(context, signal );
-            List<Timed<Signal>> invocations = getNextInvocations( context, step );
+            try {
 
-            agents.put(context.id,step.nextHandler);
+                final SimAgentContext context =
+                        new SimAgentContext( signal.value.to, signal.time );
 
-            step.emittedEvents.foreach( new Effect<SimEvent.SimEventF>() {
-                @Override public void e(SimEvent.SimEventF simEvent) {
-                    listener.e( StreamEvent.next( new Timed<>( time, simEvent.f( context ) ) ) );
-                }
-            } );
+                final Step step =
+                        invokeAgent( context, signal );
 
-            invocations
-                    .filter( Timed.<Signal>isBeforeOrEqual( endTime ) )
-                    .map( scheduleTask( listener ) )
-                    .foreach( scheduler.toEffect() );
+                final List<Timed<Signal>> invocations =
+                        getNextInvocations( context, step );
+
+                agents.put( context.id, step.nextHandler );
+
+                step.emittedEvents.foreach( new Effect<SimEvent.SimEventF>() {
+                    @Override public void e(SimEvent.SimEventF simEvent) {
+                        listener.e( StreamEvent.next( new Timed<>( time, simEvent.f( context ) ) ) );
+                    }
+                } );
+
+                invocations
+                        .filter( Timed.<Signal>isBeforeOrEqual( endTime ) )
+                        .map( scheduleTask( listener ) )
+                        .foreach( scheduler.toEffect() );
+
+            } catch (Exception e) {
+                listener.e( StreamEvent.<Timed<SimEvent>>error( e ) );
+            }
         }
 
         public String toString() {
-            return "ScheduledInvocation of "+ signal.value.id+" "+  Signal.detailShow.showS( signal.value );
+            return "ScheduledInvocation of " + signal.value.id + " " + Signal.detailShow.showS( signal.value );
         }
     }
 
