@@ -155,23 +155,23 @@ public abstract class EventStream<A> {
 
     public abstract OpenEventStream<A> open(Effect<StreamEvent<A>> effect);
 
-    public FilterEventStream<A> filter(final F<A, Boolean> pred) {
+    public EventStream<A> filter(final F<A, Boolean> pred) {
         return new FilterEventStream<>( this, pred );
     }
 
-    public <B> MappedEventStream<A, B> map(final F<A, B> f) {
+    public <B> EventStream<B> map(final F<A, B> f) {
         return new MappedEventStream<>( this, f );
     }
 
-    public <B> OptionNormalizingEventStream<B> mapOption(final F<A, Option<B>> f) {
+    public <B> EventStream<B> mapOption(final F<A, Option<B>> f) {
         return EventStream.mapOption( this, f );
     }
 
-    public <B> ListNormalizingEventStream<B> mapList(final F<A, List<B>> f) {
+    public <B> EventStream<B> mapList(final F<A, List<B>> f) {
         return EventStream.mapList( this, f );
     }
 
-    public <B> MealyEventStream<A, B> mapStateful(final State<A, B> f) {
+    public <B> EventStream<B> mapStateful(final State<A, B> f) {
         return EventStream.mapStateful( this, f );
     }
 
@@ -183,7 +183,7 @@ public abstract class EventStream<A> {
         return EventStream.mapListStateful( this, f );
     }
 
-    public <B> RawMappedEventStream<A, B> rawMap(final F<StreamEvent<A>, StreamEvent<B>> f) {
+    public <B> EventStream<B> rawMap(final F<StreamEvent<A>, StreamEvent<B>> f) {
         return new RawMappedEventStream<>( this, f );
     }
 
@@ -199,7 +199,7 @@ public abstract class EventStream<A> {
         return EventStream.merge( this, other );
     }
 
-    public AndThenEventStream<A> andThen(EventStream<A> eventual) {
+    public EventStream<A> andThen(EventStream<A> eventual) {
         return new AndThenEventStream<>( this, eventual );
     }
 
