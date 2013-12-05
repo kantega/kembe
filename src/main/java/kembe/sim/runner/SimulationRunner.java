@@ -3,10 +3,7 @@ package kembe.sim.runner;
 import fj.Effect;
 import fj.F;
 import fj.data.List;
-import kembe.EventStream;
-import kembe.OpenEventStream;
-import kembe.StreamEvent;
-import kembe.Time;
+import kembe.*;
 import kembe.sim.*;
 import kembe.sim.rand.Rand;
 import org.joda.time.Instant;
@@ -37,7 +34,7 @@ public class SimulationRunner {
 
     public EventStream<Timed<SimEvent>> eventStream(final List<Signal> startSignals) {
         return new EventStream<Timed<SimEvent>>() {
-            @Override public OpenEventStream<Timed<SimEvent>> open(final Effect<StreamEvent<Timed<SimEvent>>> effect) {
+            @Override public OpenEventStream<Timed<SimEvent>> open(final EventStreamSubscriber<Timed<SimEvent>> effect) {
 
                 scheduler.scheduleAt( startTime, new SchedulerTask() {
                     @Override public void run(Instant time) {
@@ -108,7 +105,7 @@ public class SimulationRunner {
                 );
     }
 
-    private F<Timed<Signal>, Timed<SchedulerTask>> scheduleTask(final Effect<StreamEvent<Timed<SimEvent>>> listener) {
+    private F<Timed<Signal>, Timed<SchedulerTask>> scheduleTask(final EventStreamSubscriber<Timed<SimEvent>> listener) {
         return new F<Timed<Signal>, Timed<SchedulerTask>>() {
             @Override public Timed<SchedulerTask> f(Timed<Signal> agentInvocationTimed) {
                 return new Timed<SchedulerTask>( agentInvocationTimed.time, new ScheduleInvocation( listener, agentInvocationTimed ) );
@@ -118,11 +115,11 @@ public class SimulationRunner {
 
     class ScheduleInvocation implements SchedulerTask {
 
-        final Effect<StreamEvent<Timed<SimEvent>>> listener;
+        final EventStreamSubscriber<Timed<SimEvent>> listener;
 
         final Timed<Signal> signal;
 
-        ScheduleInvocation(Effect<StreamEvent<Timed<SimEvent>>> listener, Timed<Signal> signal) {
+        ScheduleInvocation(EventStreamSubscriber<Timed<SimEvent>> listener, Timed<Signal> signal) {
             this.listener = listener;
             this.signal = signal;
         }

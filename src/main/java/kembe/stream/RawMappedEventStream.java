@@ -1,8 +1,8 @@
 package kembe.stream;
 
-import fj.Effect;
 import fj.F;
 import kembe.EventStream;
+import kembe.EventStreamSubscriber;
 import kembe.OpenEventStream;
 import kembe.StreamEvent;
 
@@ -16,9 +16,9 @@ public class RawMappedEventStream<A,B> extends EventStream<B>{
     }
 
     @Override
-    public OpenEventStream<B> open(final Effect<StreamEvent<B>> effect) {
+    public OpenEventStream<B> open(final EventStreamSubscriber<B> effect) {
         final OpenEventStream<A> oepA =
-                mapped.open(effect.comap(f));
+                mapped.open(effect.comapEvent(f));
 
         return OpenEventStream.wrap(this, oepA);
     }

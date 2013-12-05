@@ -16,16 +16,16 @@ public class OptionNormalizingEventStream<A> extends EventStream<A> {
         this.source = source;
     }
 
-    @Override public OpenEventStream<A> open(final Effect<StreamEvent<A>> effect) {
+    @Override public OpenEventStream<A> open(final EventStreamSubscriber<A> effect) {
         OpenEventStream<Option<A>> open =
                 source.open(
-                        EventStreamSubscriber.forwardTo(effect).<Option<A>>onNext(
-                                new Effect<StreamEvent.Next<Option<A>>>()
+                        effect.<Option<A>>onNext(
+                                new Effect<Option<A>>()
                                 {
                                     @Override
-                                    public void e(StreamEvent.Next<Option<A>> next)
+                                    public void e(Option<A> next)
                                     {
-                                        Option<A> maybeB = next.value;
+                                        Option<A> maybeB = next;
                                         if (maybeB.isSome())
                                          effect.e(StreamEvent.next(maybeB.some()));
                                     }

@@ -16,14 +16,14 @@ public class ListNormalizingEventStream<A> extends EventStream<A> {
         this.source = source;
     }
 
-    @Override public OpenEventStream<A> open(final Effect<StreamEvent<A>> effect) {
+    @Override public OpenEventStream<A> open(final EventStreamSubscriber<A> effect) {
         OpenEventStream<List<A>> open =
                 source.open(
-                        EventStreamSubscriber.forwardTo( effect ).<List<A>>onNext(
-                                new Effect<StreamEvent.Next<List<A>>>() {
+                        effect.<List<A>>onNext(
+                                new Effect<List<A>>() {
                                     @Override
-                                    public void e(StreamEvent.Next<List<A>> next) {
-                                        List<A> as = next.value;
+                                    public void e(List<A> next) {
+                                        List<A> as = next;
                                         for (A a : as)
                                             effect.e( StreamEvent.next( a ) );
                                     }

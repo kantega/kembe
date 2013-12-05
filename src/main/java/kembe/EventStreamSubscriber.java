@@ -2,140 +2,113 @@ package kembe;
 
 import fj.Effect;
 import fj.F;
+import fj.Unit;
 
-public class EventStreamSubscriber<A> extends Effect<StreamEvent<A>> {
-    final Effect<StreamEvent.Next<A>> onNext;
-
-    final Effect<StreamEvent.Error<A>> onException;
-
-    final Effect<StreamEvent.Done<A>> onDone;
-
-    protected EventStreamSubscriber(
-            Effect<StreamEvent.Next<A>> onNext,
-            Effect<StreamEvent.Error<A>> onException,
-            Effect<StreamEvent.Done<A>> onDone) {
-        this.onNext = onNext;
-        this.onException = onException;
-        this.onDone = onDone;
-    }
-
-    public static <A> EventStreamSubscriber<A> forwardTo(Effect<StreamEvent<A>> effect) {
-        return EventStreamSubscriber.create(
-                EventStreamSubscriber.<A>forwardNext( effect ),
-                EventStreamSubscriber.<A, A>forwardError( effect ),
-                EventStreamSubscriber.<A, A>forwardDone( effect )
-        );
-    }
-
-    public static <A> EventStreamSubscriber<A> create(
-            final Effect<StreamEvent.Next<A>> onNext,
-            final Effect<StreamEvent.Error<A>> onException,
-            final Effect<StreamEvent.Done<A>> onDone) {
-        return new EventStreamSubscriber<A>( onNext, onException, onDone );
-    }
+public abstract class EventStreamSubscriber<A> {
 
     public static <A> EventStreamSubscriber<A> create(final EventStreamHandler<A> handler) {
-        return create(
-                new Effect<StreamEvent.Next<A>>() {
-                    public void e(StreamEvent.Next<A> next) {
-                        handler.next( next.value );
-                    }
-                },
-                new Effect<StreamEvent.Error<A>>() {
-                    public void e(StreamEvent.Error<A> error) {
-                        handler.error( error.e );
-                    }
-                },
-                new Effect<StreamEvent.Done<A>>() {
-                    public void e(StreamEvent.Done<A> done) {
-                        handler.done();
-                    }
-                }
-        );
-    }
-
-    public static <A> Effect<StreamEvent.Next<A>> forwardNext(final Effect<StreamEvent<A>> effect) {
-        return new Effect<StreamEvent.Next<A>>() {
-            @Override
-            public void e(StreamEvent.Next<A> aNext) {
-                effect.e( aNext );
+        return new EventStreamSubscriber<A>() {
+            @Override public void e(StreamEvent<A> aStreamEvent) {
+                aStreamEvent.effect( handler );
             }
         };
     }
 
-    public static <A, B> Effect<StreamEvent.Error<A>> forwardError(final Effect<StreamEvent<B>> effect) {
-        return new Effect<StreamEvent.Error<A>>() {
-            @Override
-            public void e(StreamEvent.Error<A> error) {
-                effect.e( StreamEvent.<B>error( error.e ) );
+    public static <A> EventStreamSubscriber<A> create(final Effect<StreamEvent<A>> handler) {
+        return new EventStreamSubscriber<A>() {
+            @Override public void e(StreamEvent<A> aStreamEvent) {
+                handler.e(aStreamEvent);
             }
         };
     }
 
-    public static <A, B> Effect<StreamEvent.Done<A>> forwardDone(final Effect<StreamEvent<B>> effect) {
-        return new Effect<StreamEvent.Done<A>>() {
-            @Override
-            public void e(StreamEvent.Done<A> next) {
-                effect.e( StreamEvent.<B>done() );
+    public <B> EventStreamSubscriber<B> onNext(final Effect<B> effect) {
+        final EventStreamSubscriber<A> self = this;
+        return create( new EventStreamHandler<B>() {
+            @Override public void next(B o) {
+                effect.e( o );
             }
-        };
-    }
 
-    public static <A> Effect<StreamEvent.Done<A>> noOpDone() {
-        return new Effect<StreamEvent.Done<A>>() {
-            @Override
-            public void e(StreamEvent.Done<A> next) {
+            @Override public void error(Exception e) {
+                self.error( e );
             }
-        };
-    }
 
-    private static <A, B> Effect<StreamEvent.Error<B>> castError(Effect<StreamEvent.Error<A>> e) {
-        return e.comap( new F<StreamEvent.Error<B>, StreamEvent.Error<A>>() {
-            @Override public StreamEvent.Error<A> f(StreamEvent.Error<B> bError) {
-                return StreamEvent.error( bError.e );
+            @Override public void done() {
+                self.done();
             }
         } );
     }
 
-    private static <A, B> Effect<StreamEvent.Done<B>> castDone(Effect<StreamEvent.Done<A>> e) {
-        return e.comap( new F<StreamEvent.Done<B>, StreamEvent.Done<A>>() {
-            @Override public StreamEvent.Done<A> f(StreamEvent.Done<B> bDone) {
-                return StreamEvent.done();
+    public EventStreamSubscriber<A> onError(final Effect<Exception> effect) {
+        final EventStreamSubscriber<A> self = this;
+        return create( new EventStreamHandler<A>() {
+            @Override public void next(A o) {
+                self.next( o );
+            }
+
+            @Override public void error(Exception e) {
+                effect.e( e );
+            }
+
+            @Override public void done() {
+                self.done();
             }
         } );
     }
 
-    public <B> EventStreamSubscriber<B> onNext(final Effect<StreamEvent.Next<B>> onNext) {
-        return EventStreamSubscriber.create(
-                onNext,
-                EventStreamSubscriber.<A, B>castError( this.onException ),
-                EventStreamSubscriber.<A, B>castDone( this.onDone ) );
+    public EventStreamSubscriber<A> onDone(final Effect<Unit> effect) {
+        final EventStreamSubscriber<A> self = this;
+        return create( new EventStreamHandler<A>() {
+            @Override public void next(A o) {
+                self.next( o );
+            }
+
+            @Override public void error(Exception e) {
+                self.error( e );
+            }
+
+            @Override public void done() {
+                effect.e( Unit.unit() );
+            }
+        } );
     }
 
-    public EventStreamSubscriber<A> onDone(final Effect<StreamEvent.Done<A>> onDone) {
-        return EventStreamSubscriber.create( this.onNext, this.onException, onDone );
+    public void next(A a) {
+        e( StreamEvent.next( a ) );
     }
 
-    @Override
-    public void e(StreamEvent<A> aStreamEvent) {
-        aStreamEvent
-                .effect(
-                        new Effect<StreamEvent.Next<A>>() {
-                            @Override
-                            public void e(StreamEvent.Next<A> aNext) {
-                                onNext.e( aNext );
-                            }
-                        }, new Effect<StreamEvent.Error<A>>() {
-                            @Override
-                            public void e(StreamEvent.Error<A> err) {
-                                onException.e( err );
-                            }
-                        }, new Effect<StreamEvent.Done<A>>() {
-                            @Override
-                            public void e(StreamEvent.Done<A> done) {
-                                onDone.e( done );
-                            }
-                        }
-                );
+    public void error(Exception e) {
+        e( StreamEvent.<A>error( e ) );
     }
+
+    public void done() {
+        e( StreamEvent.<A>done() );
+    }
+
+    public <B> EventStreamSubscriber<B> comap(final F<B, A> f) {
+        return new EventStreamSubscriber<B>() {
+            @Override public void e(StreamEvent<B> event) {
+                EventStreamSubscriber.this.e( event.map( f ) );
+            }
+        };
+    }
+
+    public <B> EventStreamSubscriber<B> comapEvent(final F<StreamEvent<B>, StreamEvent<A>> f) {
+        return new EventStreamSubscriber<B>() {
+            @Override public void e(StreamEvent<B> event) {
+                EventStreamSubscriber.this.e( f.f(event) );
+            }
+        };
+    }
+
+    public Effect<StreamEvent<A>> toEffect() {
+        return new Effect<StreamEvent<A>>() {
+            @Override public void e(StreamEvent<A> aStreamEvent) {
+                EventStreamSubscriber.this.e( aStreamEvent );
+            }
+        };
+    }
+
+    public abstract void e(StreamEvent<A> event);
+
 }

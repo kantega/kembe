@@ -1,10 +1,10 @@
 package kembe.scheduler;
 
-import fj.Effect;
-import org.joda.time.Instant;
 import kembe.EventStream;
+import kembe.EventStreamSubscriber;
 import kembe.OpenEventStream;
 import kembe.StreamEvent;
+import org.joda.time.Instant;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -26,7 +26,7 @@ public abstract class Clock {
 
     public static EventStream<Instant> ticksEvery(final int interval, final TimeUnit timeUnit) {
         return new EventStream<Instant>() {
-            @Override public OpenEventStream<Instant> open(final Effect<StreamEvent<Instant>> effect) {
+            @Override public OpenEventStream<Instant> open(final EventStreamSubscriber<Instant> effect) {
                 final ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
 
                 Runnable ticker = new Runnable() {

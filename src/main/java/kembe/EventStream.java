@@ -15,7 +15,7 @@ public abstract class EventStream<A> {
     public static <A> EventStream<A> fromStream(final Stream<A> stream) {
         return new EventStream<A>() {
             @Override
-            public OpenEventStream<A> open(final Effect<StreamEvent<A>> effect) {
+            public OpenEventStream<A> open(final EventStreamSubscriber<A> effect) {
 
                 stream.foreach( new Effect<A>() {
                     @Override
@@ -86,7 +86,7 @@ public abstract class EventStream<A> {
         return new Split( as, bs );
     }
 
-    public static <A> F<EventStream<A>, OpenEventStream<A>> open_(final Effect<StreamEvent<A>> handler) {
+    public static <A> F<EventStream<A>, OpenEventStream<A>> open_(final EventStreamSubscriber<A> handler) {
         return new F<EventStream<A>, OpenEventStream<A>>() {
             @Override
             public OpenEventStream<A> f(EventStream<A> stream) {
@@ -153,7 +153,7 @@ public abstract class EventStream<A> {
         return normalizeList( mapStateful( as, f ) );
     }
 
-    public abstract OpenEventStream<A> open(Effect<StreamEvent<A>> effect);
+    public abstract OpenEventStream<A> open(EventStreamSubscriber<A> subscriber);
 
     public EventStream<A> filter(final F<A, Boolean> pred) {
         return new FilterEventStream<>( this, pred );

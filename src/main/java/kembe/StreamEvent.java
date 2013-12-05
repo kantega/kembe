@@ -1,6 +1,5 @@
 package kembe;
 
-import fj.Effect;
 import fj.F;
 import fj.P1;
 
@@ -16,7 +15,7 @@ public abstract class StreamEvent<A> {
     }
 
     public static <A> Next<A> next(A value){
-        return new Next<A>(value);
+        return new Next<>(value);
     }
 
     public static <A> F<A,Next<A>> next(){
@@ -28,13 +27,13 @@ public abstract class StreamEvent<A> {
     }
 
     public static <A> Error<A> error(Exception e){
-        return new Error<A>(e);
+        return new Error<>(e);
     }
 
     public static <A> Done<A> done(){
-        return new Done<A>();
+        return new Done<>();
     }
-    public abstract void effect(Effect<Next<A>> onNext, Effect<Error<A>> onException, Effect<Done<A>> onDone);
+    public abstract void effect(EventStreamHandler handler);
 
     public abstract <T> T fold(F<A, T> onNext, F<Exception, T> onError, P1<T> onDone);
 
@@ -44,8 +43,8 @@ public abstract class StreamEvent<A> {
 
 
         @Override
-        public void effect(Effect<Next<A>> onNext, Effect<Error<A>> onException, Effect<Done<A>> onDone) {
-            onDone.e(this);
+        public void effect(EventStreamHandler handler) {
+            handler.done();
         }
 
         @Override
@@ -55,7 +54,7 @@ public abstract class StreamEvent<A> {
 
         @Override
         public <B> StreamEvent<B> map(F<A, B> f) {
-            return new Done<B>();
+            return new Done<>();
         }
     }
 
@@ -67,8 +66,8 @@ public abstract class StreamEvent<A> {
         }
 
         @Override
-        public void effect(Effect<Next<A>> onNext, Effect<Error<A>> onException, Effect<Done<A>> onDone) {
-            onException.e(this);
+        public void effect(EventStreamHandler handler) {
+            handler.error( e );
         }
 
         @Override
@@ -78,7 +77,7 @@ public abstract class StreamEvent<A> {
 
         @Override
         public <B> StreamEvent<B> map(F<A, B> f) {
-            return new Error<B>(e);
+            return new Error<>(e);
         }
     }
 
@@ -92,8 +91,8 @@ public abstract class StreamEvent<A> {
         }
 
         @Override
-        public void effect(Effect<Next<A>> onNext, Effect<Error<A>> onException, Effect<Done<A>> onDone) {
-            onNext.e(this);
+        public void effect(EventStreamHandler handler) {
+            handler.next( value );
         }
 
         @Override
@@ -103,7 +102,7 @@ public abstract class StreamEvent<A> {
 
         @Override
         public <B> StreamEvent<B> map(F<A, B> f) {
-            return new Next<B>(f.f(value));
+            return new Next<>(f.f(value));
         }
     }
 

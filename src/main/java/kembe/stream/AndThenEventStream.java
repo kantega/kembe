@@ -1,6 +1,7 @@
 package kembe.stream;
 
 import fj.Effect;
+import fj.Unit;
 import fj.data.Either;
 import fj.data.List;
 import kembe.EventStream;
@@ -23,9 +24,9 @@ public class AndThenEventStream<A> extends EventStream<A> {
     }
 
     @Override
-    public OpenEventStream<A> open(final Effect<StreamEvent<A>> effect) {
+    public OpenEventStream<A> open(final EventStreamSubscriber<A> effect) {
 
-//TODO This implementation is flawed! Use actors.
+//TODO Thread issues may occur, consider to use actors here
         final Effect<Either<StreamEvent<A>, StreamEvent<A>>> bufferingEffect =
                 new Effect<Either<StreamEvent<A>, StreamEvent<A>>>() {
 
@@ -35,23 +36,23 @@ public class AndThenEventStream<A> extends EventStream<A> {
                     final AtomicBoolean flushed =
                             new AtomicBoolean( false );
 
-                    final Effect<StreamEvent<A>> eventualHandler =
-                            EventStreamSubscriber.forwardTo( effect ).onNext(
-                                    new Effect<StreamEvent.Next<A>>() {
+                    final EventStreamSubscriber<A> eventualHandler =
+                            effect.onNext(
+                                    new Effect<A>() {
                                         @Override
-                                        public void e(StreamEvent.Next<A> next) {
+                                        public void e(A next) {
                                             if (flushed.get())
-                                                effect.e( new StreamEvent.Next<>( next.value ) );
+                                                effect.e( new StreamEvent.Next<>( next ) );
                                             else
-                                                buffer.add( next.value );
+                                                buffer.add( next );
                                         }
                                     }
                             );
 
-                    final Effect<StreamEvent<A>> firstHandler =
-                            EventStreamSubscriber.forwardTo( effect ).onDone(
-                                    new Effect<StreamEvent.Done<A>>() {
-                                        public void e(StreamEvent.Done<A> objectDone) {
+                    final EventStreamSubscriber<A> firstHandler =
+                            effect.onDone(
+                                    new Effect<Unit>() {
+                                        public void e(Unit u) {
 
                                             for (A a : buffer) {
                                                 effect.e( new StreamEvent.Next<>( a ) );
@@ -73,8 +74,8 @@ public class AndThenEventStream<A> extends EventStream<A> {
                     }
                 };
 
-        OpenEventStream<A> eventualOpenStream = eventual.open( bufferingEffect.comap( Either.<StreamEvent<A>, StreamEvent<A>>right_() ) );
-        OpenEventStream<A> firstOpenStream = first.open( bufferingEffect.comap( Either.<StreamEvent<A>, StreamEvent<A>>left_() ) );
+        OpenEventStream<A> eventualOpenStream = eventual.open( EventStreamSubscriber.create( bufferingEffect.comap( Either.<StreamEvent<A>, StreamEvent<A>>right_() ) ) );
+        OpenEventStream<A> firstOpenStream = first.open(EventStreamSubscriber.create( bufferingEffect.comap( Either.<StreamEvent<A>, StreamEvent<A>>left_() ) ) );
 
 
         return OpenEventStream.wrap( this, List.<OpenEventStream<?>>list( firstOpenStream, eventualOpenStream ) );

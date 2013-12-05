@@ -5,7 +5,6 @@ import fj.F;
 import kembe.EventStream;
 import kembe.EventStreamSubscriber;
 import kembe.OpenEventStream;
-import kembe.StreamEvent;
 
 public class FilterEventStream<A> extends EventStream<A> {
     private final EventStream<A> wrapped;
@@ -18,13 +17,13 @@ public class FilterEventStream<A> extends EventStream<A> {
     }
 
     @Override
-    public OpenEventStream<A> open(final Effect<StreamEvent<A>> effect) {
+    public OpenEventStream<A> open(final EventStreamSubscriber<A> effect) {
 
-        return wrapped.open( EventStreamSubscriber.<A>forwardTo( effect ).onNext( new Effect<StreamEvent.Next<A>>() {
+        return wrapped.open( effect.onNext( new Effect<A>() {
             @Override
-            public void e(StreamEvent.Next<A> next) {
-                if (predicate.f( next.value )) {
-                    effect.e( next );
+            public void e(A next) {
+                if (predicate.f( next )) {
+                    effect.next( next );
                 }
             }
         } ) );

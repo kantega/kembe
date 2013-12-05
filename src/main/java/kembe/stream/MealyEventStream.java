@@ -14,16 +14,16 @@ public class MealyEventStream<A, B> extends EventStream<B> {
         this.source = source;
     }
 
-    @Override public OpenEventStream<B> open(final Effect<StreamEvent<B>> effect) {
+    @Override public OpenEventStream<B> open(final EventStreamSubscriber<B> effect) {
         OpenEventStream<A> open =
                 source.open(
-                        EventStreamSubscriber.forwardTo( effect ).<A>onNext(
-                                new Effect<StreamEvent.Next<A>>() {
+                        effect.<A>onNext(
+                                new Effect<A>() {
                                     volatile State<A, B> state = initialState;
 
                                     @Override
-                                    public void e(StreamEvent.Next<A> next) {
-                                        State.Transition<A, B> t = state.apply( next.value );
+                                    public void e(A next) {
+                                        State.Transition<A, B> t = state.apply( next );
                                         state = t.nextState;
                                         effect.e( StreamEvent.next( t.result ) );
                                     }

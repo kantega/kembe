@@ -6,7 +6,6 @@ import fj.data.Validation;
 import kembe.EventStream;
 import kembe.EventStreamSubscriber;
 import kembe.OpenEventStream;
-import kembe.StreamEvent;
 
 public class ValidationMappedEventStream<E, T> extends EventStream<T> {
     private final EventStream<Validation<E, T>> wrappedStream;
@@ -19,19 +18,18 @@ public class ValidationMappedEventStream<E, T> extends EventStream<T> {
     }
 
     @Override
-    public OpenEventStream<T> open(final Effect<StreamEvent<T>> effect) {
+    public OpenEventStream<T> open(final EventStreamSubscriber<T> effect) {
         OpenEventStream<Validation<E, T>> open =
                 wrappedStream.open(
-                        EventStreamSubscriber.forwardTo( effect ).onNext(
-                                new Effect<StreamEvent.Next<Validation<E, T>>>() {
+                        effect.onNext(
+                                new Effect<Validation<E, T>>() {
                                     @Override
-                                    public void e(StreamEvent.Next<Validation<E, T>> next) {
-                                        if (next.value.isSuccess())
-                                            effect.e( StreamEvent.next( next.value.success() ) );
+                                    public void e(Validation<E, T> next) {
+                                        if (next.isSuccess())
+                                            effect.next( next.success() );
                                         else
-                                            effect.e( StreamEvent.<T>error( new Exception( errorShow.showS( next.value.fail() ) ) ) );
+                                            effect.error( new Exception( errorShow.showS( next.fail() ) ) );
                                     }
-
                                 } ) );
 
         return OpenEventStream.wrap( this, open );
