@@ -1,5 +1,6 @@
 package kembe;
 
+import fj.Effect;
 import fj.F;
 import fj.P1;
 import fj.Show;
@@ -9,13 +10,13 @@ import fj.data.Validation;
 
 public abstract class StreamEvent<A> {
 
-    public static <A,B> F<Either<StreamEvent<A>,StreamEvent<B>>,StreamEvent<Either<A,B>>> normEither(){
+    public static <A, B> F<Either<StreamEvent<A>, StreamEvent<B>>, StreamEvent<Either<A, B>>> normEither() {
         return new F<Either<StreamEvent<A>, StreamEvent<B>>, StreamEvent<Either<A, B>>>() {
             @Override public StreamEvent<Either<A, B>> f(Either<StreamEvent<A>, StreamEvent<B>> either) {
-                if(either.isLeft())
-                    return either.left().value().map(Either.<A,B>left_());
+                if (either.isLeft())
+                    return either.left().value().map( Either.<A, B>left_() );
                 else
-                    return either.right().value().map(Either.<A,B>right_());
+                    return either.right().value().map( Either.<A, B>right_() );
             }
         };
     }
@@ -76,11 +77,28 @@ public abstract class StreamEvent<A> {
         return new Done<>();
     }
 
-    public <E, B> StreamEvent<B> mapV(F<A, Validation<NonEmptyList<E>, B>> f,Show<E> msgConverter) {
-        return liftV( f,msgConverter ).f( this );
+    public <E, B> StreamEvent<B> mapV(F<A, Validation<NonEmptyList<E>, B>> f, Show<E> msgConverter) {
+        return liftV( f, msgConverter ).f( this );
     }
 
-    public abstract void effect(EventStreamHandler handler);
+    public void effect(final EventStreamHandler handler) {
+        effect( new Effect<Next<A>>() {
+                    @Override public void e(Next<A> aNext) {
+                        handler.next( aNext.value );
+                    }
+                }, new Effect<Error<A>>() {
+                    @Override public void e(Error<A> aError) {
+                        handler.error( aError.e );
+                    }
+                }, new Effect<Done<A>>() {
+                    @Override public void e(Done<A> aDone) {
+                        handler.done();
+                    }
+                }
+        );
+    }
+
+    public abstract void effect(Effect<Next<A>> onNext, Effect<Error<A>> onError, Effect<Done<A>> onDone);
 
     public abstract <T> T fold(F<A, T> onNext, F<Exception, T> onError, P1<T> onDone);
 
@@ -89,9 +107,8 @@ public abstract class StreamEvent<A> {
     public static class Done<A> extends StreamEvent<A> {
 
 
-        @Override
-        public void effect(EventStreamHandler handler) {
-            handler.done();
+        @Override public void effect(Effect<Next<A>> onNext, Effect<Error<A>> onError, Effect<Done<A>> onDone) {
+            onDone.e( this );
         }
 
         @Override
@@ -112,9 +129,8 @@ public abstract class StreamEvent<A> {
             this.e = e;
         }
 
-        @Override
-        public void effect(EventStreamHandler handler) {
-            handler.error( e );
+        @Override public void effect(Effect<Next<A>> onNext, Effect<Error<A>> onError, Effect<Done<A>> onDone) {
+            onError.e( this );
         }
 
         @Override
@@ -137,9 +153,8 @@ public abstract class StreamEvent<A> {
             this.value = value;
         }
 
-        @Override
-        public void effect(EventStreamHandler handler) {
-            handler.next( value );
+        @Override public void effect(Effect<Next<A>> onNext, Effect<Error<A>> onError, Effect<Done<A>> onDone) {
+            onNext.e( this );
         }
 
         @Override
