@@ -3,10 +3,22 @@ package kembe;
 import fj.F;
 import fj.P1;
 import fj.Show;
+import fj.data.Either;
 import fj.data.NonEmptyList;
 import fj.data.Validation;
 
 public abstract class StreamEvent<A> {
+
+    public static <A,B> F<Either<StreamEvent<A>,StreamEvent<B>>,StreamEvent<Either<A,B>>> normEither(){
+        return new F<Either<StreamEvent<A>, StreamEvent<B>>, StreamEvent<Either<A, B>>>() {
+            @Override public StreamEvent<Either<A, B>> f(Either<StreamEvent<A>, StreamEvent<B>> either) {
+                if(either.isLeft())
+                    return either.left().value().map(Either.<A,B>left_());
+                else
+                    return either.right().value().map(Either.<A,B>right_());
+            }
+        };
+    }
 
     public static <A, B> F<StreamEvent<A>, StreamEvent<B>> lift(final F<A, B> f) {
         return new F<StreamEvent<A>, StreamEvent<B>>() {
