@@ -118,39 +118,23 @@ public abstract class EventStream<A> {
     }
 
     public static <A, B> EitherEventStream<A, B> or(EventStream<A> a, EventStream<B> b) {
-        return new EitherEventStream<A, B>( a, b );
+        return new EitherEventStream<>( a, b );
     }
 
     public static <A> EventStream<A> merge(EventStream<A> one, EventStream<A> other) {
-        return EventStream.normalize( new EitherEventStream<A, A>( one, other ) );
+        return EventStream.normalize( new EitherEventStream<>( one, other ) );
     }
 
-    public static <A, B> OptionNormalizingEventStream<B> mapOption(EventStream<A> as, F<A, Option<B>> f) {
-        return normalizeOption( as.map( f ) );
-    }
-
-    public static <A, B> ListNormalizingEventStream<B> mapList(EventStream<A> as, F<A, List<B>> f) {
-        return normalizeList( as.map( f ) );
-    }
-
-    public static <A> OptionNormalizingEventStream<A> normalizeOption(EventStream<Option<A>> as) {
-        return new OptionNormalizingEventStream<>( as );
-    }
-
-    public static <A> ListNormalizingEventStream<A> normalizeList(EventStream<List<A>> as) {
-        return new ListNormalizingEventStream<>( as );
+    public static <A> EventStream<A> flatten(EventStream<EventStream<A>> as) {
+        return new FlatteningEventStream<>( as );
     }
 
     public static <A, B> MealyEventStream<A, B> mapStateful(EventStream<A> as, State<A, B> f) {
         return new MealyEventStream<>( as, f );
     }
 
-    public static <A, B> EventStream<B> mapOptionalStateful(EventStream<A> as, State<A, Option<B>> f) {
-        return normalizeOption( mapStateful( as, f ) );
-    }
-
-    public static <A, B> EventStream<B> mapListStateful(EventStream<A> as, State<A, List<B>> f) {
-        return normalizeList( mapStateful( as, f ) );
+    public static <A, B> EventStream<B> bindStateful(EventStream<A> as, State<A, EventStream<B>> s) {
+        return flatten( mapStateful( as, s ) );
     }
 
     public abstract OpenEventStream<A> open(EventStreamSubscriber<A> subscriber);
@@ -163,32 +147,21 @@ public abstract class EventStream<A> {
         return new MappedEventStream<>( this, f );
     }
 
-    public <B> EventStream<B> mapOption(final F<A, Option<B>> f) {
-        return EventStream.mapOption( this, f );
-    }
-
-    public <B> EventStream<B> mapList(final F<A, List<B>> f) {
-        return EventStream.mapList( this, f );
-    }
 
     public <B> EventStream<B> mapStateful(final State<A, B> f) {
         return EventStream.mapStateful( this, f );
-    }
-
-    public <B> EventStream<B> mapOptionalStateful(final State<A, Option<B>> f) {
-        return EventStream.mapOptionalStateful( this, f );
-    }
-
-    public <B> EventStream<B> mapListStateful(final State<A, List<B>> f) {
-        return EventStream.mapListStateful( this, f );
     }
 
     public <B> EventStream<B> rawMap(final F<StreamEvent<A>, StreamEvent<B>> f) {
         return new RawMappedEventStream<>( this, f );
     }
 
-    public <B> BoundEventStream<A, B> bind(F<A, EventStream<B>> f) {
-        return new BoundEventStream<>( this, f );
+    public <B> EventStream<B> bind(F<A, EventStream<B>> f) {
+        return new FlatteningEventStream<>( this.map(f) );
+    }
+
+    public <B> EventStream<B> bindStateful(final State<A, EventStream<B>> f){
+        return bindStateful( this,f );
     }
 
     public <B> EitherEventStream<A, B> or(EventStream<B> other) {
