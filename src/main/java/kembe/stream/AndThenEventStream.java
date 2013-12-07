@@ -2,6 +2,8 @@ package kembe.stream;
 
 import fj.Effect;
 import fj.Unit;
+import fj.control.parallel.Actor;
+import fj.control.parallel.Strategy;
 import fj.data.Either;
 import fj.data.List;
 import kembe.EventStream;
@@ -26,7 +28,6 @@ public class AndThenEventStream<A> extends EventStream<A> {
     @Override
     public OpenEventStream<A> open(final EventStreamSubscriber<A> effect) {
 
-//TODO Thread issues may occur, consider to use actors here
         final Effect<Either<StreamEvent<A>, StreamEvent<A>>> bufferingEffect =
                 new Effect<Either<StreamEvent<A>, StreamEvent<A>>>() {
 
@@ -63,14 +64,21 @@ public class AndThenEventStream<A> extends EventStream<A> {
                                     }
                             );
 
+                    final Actor<Either<StreamEvent<A>, StreamEvent<A>>> actor =
+                            Actor.queueActor( Strategy.<Unit>seqStrategy(),new Effect<Either<StreamEvent<A>, StreamEvent<A>>>() {
+                                @Override public void e(Either<StreamEvent<A>, StreamEvent<A>> event) {
+                                    if (event.isLeft()) {
+                                        firstHandler.e( event.left().value() );
+                                    }
+                                    else {
+                                        eventualHandler.e( event.right().value() );
+                                    }
+                                }
+                            } );
+
                     @Override
                     public void e(Either<StreamEvent<A>, StreamEvent<A>> event) {
-                        if (event.isLeft()) {
-                            firstHandler.e( event.left().value() );
-                        }
-                        else {
-                            eventualHandler.e( event.right().value() );
-                        }
+                        actor.act( event );
                     }
                 };
 
