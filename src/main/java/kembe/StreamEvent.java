@@ -164,7 +164,13 @@ public abstract class StreamEvent<A> {
 
         @Override
         public <B> StreamEvent<B> map(F<A, B> f) {
-            return new Next<>( f.f( value ) );
+            try{
+                B nextValue = f.f(value);
+                return new Next<>( nextValue );
+            }catch (Exception e){
+                return StreamEvent.error( e );
+            }
+
         }
     }
 
