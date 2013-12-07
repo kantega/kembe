@@ -83,7 +83,7 @@ public class Time {
     }
 
     public static LocalTime timeOfDay(int hours, int seconds) {
-        return new LocalTime( hours, seconds );
+        return new LocalTime( hours, seconds ).withMillisOfSecond( 0 );
     }
 
     public static class IntervalBuilder {
