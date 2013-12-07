@@ -9,7 +9,7 @@ public class MealyEventStream<A, B> extends EventStream<B> {
 
     private final EventStream<A> source;
 
-    public MealyEventStream(EventStream<A> source,State<A, B> initialState) {
+    public MealyEventStream(EventStream<A> source, State<A, B> initialState) {
         this.initialState = initialState;
         this.source = source;
     }
@@ -23,9 +23,13 @@ public class MealyEventStream<A, B> extends EventStream<B> {
 
                                     @Override
                                     public void e(A next) {
-                                        State.Transition<A, B> t = state.apply( next );
-                                        state = t.nextState;
-                                        effect.e( StreamEvent.next( t.result ) );
+                                        try {
+                                            State.Transition<A, B> t = state.apply( next );
+                                            state = t.nextState;
+                                            effect.e( StreamEvent.next( t.result ) );
+                                        } catch (Exception e) {
+                                            effect.e( StreamEvent.<B>error( e ) );
+                                        }
                                     }
                                 } ) );
 

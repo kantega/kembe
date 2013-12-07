@@ -43,6 +43,10 @@ public class Time {
         return new IntervalBuilder( instant );
     }
 
+    public static DurationBuilder durationOf(ReadableInstant start){
+        return new DurationBuilder(start);
+    }
+
     public static Rand<Duration> randomDuration(final Duration min, final Duration max) {
         final long diff = Math.abs( max.getMillis() - min.getMillis() );
 
@@ -101,8 +105,25 @@ public class Time {
         public Interval lasting(ReadablePeriod period) {
             return new Interval( start, start.toInstant().toDateTime().plus( period ) );
         }
+    }
+
+    public static class DurationBuilder{
+        final ReadableInstant start;
 
 
+        public DurationBuilder(ReadableInstant start) {
+            this.start = start;
+        }
+
+        public Duration until(ReadableInstant end){
+            long s = Math.min( start.getMillis(),end.getMillis() );
+            long e = Math.max( start.getMillis(),end.getMillis() );
+
+            if(s == e)
+                return Duration.ZERO;
+            else
+                return Duration.millis( e-s);
+        }
     }
 
 }
