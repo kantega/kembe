@@ -5,12 +5,12 @@ import kembe.*;
 
 public class MealyEventStream<A, B> extends EventStream<B> {
 
-    private final State<A, B> initialState;
+    private final Mealy<A, B> initialMealy;
 
     private final EventStream<A> source;
 
-    public MealyEventStream(EventStream<A> source, State<A, B> initialState) {
-        this.initialState = initialState;
+    public MealyEventStream(EventStream<A> source, Mealy<A, B> initialMealy) {
+        this.initialMealy = initialMealy;
         this.source = source;
     }
 
@@ -19,13 +19,13 @@ public class MealyEventStream<A, B> extends EventStream<B> {
                 source.open(
                         effect.<A>onNext(
                                 new Effect<A>() {
-                                    volatile State<A, B> state = initialState;
+                                    volatile Mealy<A, B> state = initialMealy;
 
                                     @Override
                                     public void e(A next) {
                                         try {
-                                            State.Transition<A, B> t = state.apply( next );
-                                            state = t.nextState;
+                                            Mealy.Transition<A, B> t = state.apply( next );
+                                            state = t.nextMealy;
                                             effect.e( StreamEvent.next( t.result ) );
                                         } catch (Exception e) {
                                             effect.e( StreamEvent.<B>error( e ) );

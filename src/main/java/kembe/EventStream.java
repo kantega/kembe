@@ -141,11 +141,11 @@ public abstract class EventStream<A> {
         return new FlatteningEventStream<>( as );
     }
 
-    public static <A, B> MealyEventStream<A, B> mapStateful(EventStream<A> as, State<A, B> f) {
+    public static <A, B> MealyEventStream<A, B> mapStateful(EventStream<A> as, Mealy<A, B> f) {
         return new MealyEventStream<>( as, f );
     }
 
-    public static <A, B> EventStream<B> bindStateful(EventStream<A> as, State<A, EventStream<B>> s) {
+    public static <A, B> EventStream<B> bindStateful(EventStream<A> as, Mealy<A, EventStream<B>> s) {
         return flatten( mapStateful( as, s ) );
     }
 
@@ -160,7 +160,7 @@ public abstract class EventStream<A> {
     }
 
 
-    public <B> EventStream<B> mapStateful(final State<A, B> f) {
+    public <B> EventStream<B> mapStateful(final Mealy<A, B> f) {
         return EventStream.mapStateful( this, f );
     }
 
@@ -172,7 +172,7 @@ public abstract class EventStream<A> {
         return new FlatteningEventStream<>( this.map(f) );
     }
 
-    public <B> EventStream<B> bindStateful(final State<A, EventStream<B>> f){
+    public <B> EventStream<B> bindStateful(final Mealy<A, EventStream<B>> f){
         return bindStateful( this,f );
     }
 
