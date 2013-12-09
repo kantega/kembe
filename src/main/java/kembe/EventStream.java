@@ -9,6 +9,8 @@ import kembe.stream.*;
 import kembe.util.Functions;
 import kembe.util.Split;
 
+import java.util.ArrayList;
+
 
 public abstract class EventStream<A> {
 
@@ -30,15 +32,15 @@ public abstract class EventStream<A> {
         };
     }
 
-    public static <A> F<Stream<A>,EventStream<A>> fromStream(){
+    public static <A> F<Stream<A>, EventStream<A>> fromStream() {
         return new F<Stream<A>, EventStream<A>>() {
             @Override public EventStream<A> f(Stream<A> as) {
-                return fromStream(as);
+                return fromStream( as );
             }
         };
     }
 
-    public static <A> F<A,EventStream<A>> fromStream(F<A,Stream<A>> f){
+    public static <A> F<A, EventStream<A>> fromStream(F<A, Stream<A>> f) {
         return f.andThen( EventStream.<A>fromStream() );
     }
 
@@ -149,6 +151,25 @@ public abstract class EventStream<A> {
         return flatten( mapStateful( as, s ) );
     }
 
+    public Stream<A> evaluate() {
+        final ArrayList<A> list = new ArrayList<>();
+        OpenEventStream<A> a = open( EventStreamSubscriber.create( new EventStreamHandler<A>() {
+            @Override public void next(A a) {
+                list.add( a );
+            }
+
+            @Override public void error(Exception e) {
+
+            }
+
+            @Override public void done() {
+
+            }
+        } ) );
+        a.close();
+        return Stream.iterableStream( list );
+    }
+
     public abstract OpenEventStream<A> open(EventStreamSubscriber<A> subscriber);
 
     public EventStream<A> filter(final F<A, Boolean> pred) {
@@ -159,7 +180,6 @@ public abstract class EventStream<A> {
         return new MappedEventStream<>( this, f );
     }
 
-
     public <B> EventStream<B> mapStateful(final Mealy<A, B> f) {
         return EventStream.mapStateful( this, f );
     }
@@ -169,11 +189,11 @@ public abstract class EventStream<A> {
     }
 
     public <B> EventStream<B> bind(F<A, EventStream<B>> f) {
-        return new FlatteningEventStream<>( this.map(f) );
+        return new FlatteningEventStream<>( this.map( f ) );
     }
 
-    public <B> EventStream<B> bindStateful(final Mealy<A, EventStream<B>> f){
-        return bindStateful( this,f );
+    public <B> EventStream<B> bindStateful(final Mealy<A, EventStream<B>> f) {
+        return bindStateful( this, f );
     }
 
     public <B> EventStream<Either<A, B>> or(EventStream<B> other) {
