@@ -1,10 +1,9 @@
 package kembe;
 
-import fj.Effect;
-import fj.F;
-import fj.P1;
-import fj.Show;
-import fj.data.*;
+import fj.*;
+import fj.data.Either;
+import fj.data.Stream;
+import fj.data.Validation;
 import kembe.stream.*;
 import kembe.util.Functions;
 import kembe.util.Split;
@@ -141,12 +140,8 @@ public abstract class EventStream<A> {
         return new FlatteningEventStream<>( as );
     }
 
-    public static <A, B> MealyEventStream<A, B> mapStateful(EventStream<A> as, Mealy<A, B> f) {
-        return new MealyEventStream<>( as, f );
-    }
-
-    public static <A, B> EventStream<B> bindStateful(EventStream<A> as, Mealy<A, EventStream<B>> s) {
-        return flatten( mapStateful( as, s ) );
+    public static <A, B> LeftFoldEventStream<A, B> foldLeft(EventStream<A> stream, F2<B,A,B> f, B b) {
+        return new LeftFoldEventStream<>( f,b,stream );
     }
 
     public abstract OpenEventStream<A> open(EventStreamSubscriber<A> subscriber);
@@ -160,8 +155,8 @@ public abstract class EventStream<A> {
     }
 
 
-    public <B> EventStream<B> mapStateful(final Mealy<A, B> f) {
-        return EventStream.mapStateful( this, f );
+    public <B> EventStream<B> foldLeft(F2<B,A,B> f, B initialState){
+        return foldLeft( this,f,initialState );
     }
 
     public <B> EventStream<B> rawMap(final F<StreamEvent<A>, StreamEvent<B>> f) {
@@ -170,10 +165,6 @@ public abstract class EventStream<A> {
 
     public <B> EventStream<B> bind(F<A, EventStream<B>> f) {
         return new FlatteningEventStream<>( this.map(f) );
-    }
-
-    public <B> EventStream<B> bindStateful(final Mealy<A, EventStream<B>> f){
-        return bindStateful( this,f );
     }
 
     public <B> EitherEventStream<A, B> or(EventStream<B> other) {
