@@ -38,5 +38,28 @@ public abstract class Mealy<A,B> {
         };
     }
 
+    public static <A,B> F<A,B> toUnpureF(Mealy<A,B> mealy){
+        return new Driver<>( mealy );
+    }
+
+    /**
+     * Sideffecting keeper of mealy state.
+     * @param <A>
+     * @param <B>
+     */
+    static class Driver<A,B> extends F<A,B>{
+
+        private volatile Mealy<A,B> mealy;
+
+        public Driver(final Mealy<A,B> mealy){
+            this.mealy = mealy;
+        }
+
+        @Override public B f(A a) {
+            Transition<A,B> t = mealy.apply( a );
+            mealy = t.nextMealy;
+            return t.result;
+        }
+    }
 
 }
