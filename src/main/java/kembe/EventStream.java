@@ -30,6 +30,18 @@ public abstract class EventStream<A> {
         };
     }
 
+    public static <A> F<Stream<A>,EventStream<A>> fromStream(){
+        return new F<Stream<A>, EventStream<A>>() {
+            @Override public EventStream<A> f(Stream<A> as) {
+                return fromStream(as);
+            }
+        };
+    }
+
+    public static <A> F<A,EventStream<A>> fromStream(F<A,Stream<A>> f){
+        return f.andThen( EventStream.<A>fromStream() );
+    }
+
     public static <A> EventStream<A> normalize(EventStream<Either<A, A>> eitherStream) {
         return eitherStream.map( EitherEventStream.<A>normalize() );
     }
