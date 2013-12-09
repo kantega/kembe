@@ -1,39 +1,32 @@
 package kembe.stream;
 
 import fj.Effect;
-import fj.F2;
-import kembe.EventStream;
-import kembe.EventStreamSubscriber;
-import kembe.OpenEventStream;
-import kembe.StreamEvent;
+import kembe.*;
 
-public class LeftFoldEventStream<A, B> extends EventStream<B> {
+public class MealyEventStream<A, B> extends EventStream<B> {
 
-    private final F2<B,A, B> f;
-
-    private final B initState;
+    private final Mealy<A, B> initialMealy;
 
     private final EventStream<A> source;
 
-    public LeftFoldEventStream(F2<B, A, B> f, B initState, EventStream<A> source) {
-        this.f = f;
-        this.initState = initState;
+    public MealyEventStream(EventStream<A> source, Mealy<A, B> initialMealy) {
+        this.initialMealy = initialMealy;
         this.source = source;
     }
-
 
     @Override public OpenEventStream<B> open(final EventStreamSubscriber<B> effect) {
         OpenEventStream<A> open =
                 source.open(
                         effect.<A>onNext(
                                 new Effect<A>() {
-                                    volatile B state = initState;
+                                    volatile Mealy<A, B> state = initialMealy;
 
                                     @Override
                                     public void e(A next) {
                                         try {
-                                            state = f.f(state).f(next);
-                                            effect.e( StreamEvent.next( state) );
+                                            Mealy.Transition<A, B> t = state.apply( next );
+                                            state = t.nextMealy;
+                                            effect.e( StreamEvent.next( t.result ) );
                                         } catch (Exception e) {
                                             effect.e( StreamEvent.<B>error( e ) );
                                         }
