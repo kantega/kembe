@@ -19,6 +19,10 @@ public abstract class Mealy<A,B> {
         return map(this,f);
     }
 
+
+    public F<A,B> toUnsafeIncrementingFunction(){
+        return new UnsafeIncrementingFunction<>( this );
+    }
     public static <A,B> Transition<A,B> transition(B value, Mealy<A,B> next){
         return new Transition<>(value,next);
     }
@@ -33,7 +37,7 @@ public abstract class Mealy<A,B> {
     }
 
     public static <A,B> P2<Mealy<A,B>,Stream<B>> foldInit(Mealy<A,B> mealy){
-        return P.p(mealy,Stream.<B>nil());
+        return P.p( mealy, Stream.<B>nil() );
     }
 
     public static <A,B> F2<P2<Mealy<A,B>,Stream<B>>,A,P2<Mealy<A,B>,Stream<B>>> leftFold(){
@@ -55,6 +59,26 @@ public abstract class Mealy<A,B> {
         Transition(B result, Mealy<A, B> nextMealy) {
             this.result = result;
             this.nextMealy = nextMealy;
+        }
+    }
+
+    /**
+     * Sideffecting keeper of mealy state.
+     * @param <A>
+     * @param <B>
+     */
+    static class UnsafeIncrementingFunction<A,B> extends F<A,B>{
+
+        private volatile Mealy<A,B> mealy;
+
+        public UnsafeIncrementingFunction(final Mealy<A, B> mealy){
+            this.mealy = mealy;
+        }
+
+        @Override public B f(A a) {
+            Transition<A,B> t = mealy.apply( a );
+            mealy = t.nextMealy;
+            return t.result;
         }
     }
 
