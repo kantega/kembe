@@ -11,6 +11,10 @@ public abstract class Mealy<A,B> {
         return this;
     }
 
+    public <C> Mealy<A,C> map(F<B,C> f){
+        return map(this,f);
+    }
+
     public static class Transition<A,B>{
         public final B result;
         public final Mealy<A,B> nextMealy;
@@ -33,4 +37,6 @@ public abstract class Mealy<A,B> {
             }
         };
     }
+
+
 }
