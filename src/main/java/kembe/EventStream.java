@@ -189,7 +189,11 @@ public abstract class EventStream<A> {
     }
 
     public <B> EventStream<B> bind(F<A, EventStream<B>> f) {
-        return new FlatteningEventStream<>( this.map( f ) );
+        return flatten( this.map( f ) );
+    }
+
+    public <B> EventStream<B> rawBind(F<StreamEvent<A>,EventStream<B>> f){
+        return new RawBoundEventStream(this,f);
     }
 
     public <B> EventStream<B> bindStateful(final Mealy<A, EventStream<B>> f) {
