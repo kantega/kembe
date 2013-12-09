@@ -1,6 +1,10 @@
 package kembe;
 
 import fj.F;
+import fj.F2;
+import fj.P;
+import fj.P2;
+import fj.data.Stream;
 
 public abstract class Mealy<A,B> {
 
@@ -13,16 +17,6 @@ public abstract class Mealy<A,B> {
 
     public <C> Mealy<A,C> map(F<B,C> f){
         return map(this,f);
-    }
-
-    public static class Transition<A,B>{
-        public final B result;
-        public final Mealy<A,B> nextMealy;
-
-        Transition(B result, Mealy<A, B> nextMealy) {
-            this.result = result;
-            this.nextMealy = nextMealy;
-        }
     }
 
     public static <A,B> Transition<A,B> transition(B value, Mealy<A,B> next){
@@ -38,27 +32,29 @@ public abstract class Mealy<A,B> {
         };
     }
 
-    public static <A,B> F<A,B> toUnpureF(Mealy<A,B> mealy){
-        return new Driver<>( mealy );
+    public static <A,B> P2<Mealy<A,B>,Stream<B>> foldInit(Mealy<A,B> mealy){
+        return P.p(mealy,Stream.<B>nil());
     }
 
-    /**
-     * Sideffecting keeper of mealy state.
-     * @param <A>
-     * @param <B>
-     */
-    static class Driver<A,B> extends F<A,B>{
+    public static <A,B> F2<P2<Mealy<A,B>,Stream<B>>,A,P2<Mealy<A,B>,Stream<B>>> leftFold(){
+        return new F2<P2<Mealy<A, B>, Stream<B>>, A, P2<Mealy<A, B>, Stream<B>>>() {
+            @Override public P2<Mealy<A, B>, Stream<B>> f(P2<Mealy<A, B>, Stream<B>> currentState, A a) {
+                Transition<A,B> nextValues = currentState._1().apply( a );
+                Stream<B> results = currentState._2().cons( nextValues.result );
+                return P.p(nextValues.nextMealy,results);
+            }
+        };
+    }
 
-        private volatile Mealy<A,B> mealy;
 
-        public Driver(final Mealy<A,B> mealy){
-            this.mealy = mealy;
-        }
 
-        @Override public B f(A a) {
-            Transition<A,B> t = mealy.apply( a );
-            mealy = t.nextMealy;
-            return t.result;
+    public static class Transition<A,B>{
+        public final B result;
+        public final Mealy<A,B> nextMealy;
+
+        Transition(B result, Mealy<A, B> nextMealy) {
+            this.result = result;
+            this.nextMealy = nextMealy;
         }
     }
 
