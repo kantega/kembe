@@ -151,6 +151,10 @@ public abstract class EventStream<A> {
         return flatten( mapStateful( as, s ) );
     }
 
+    public static <A> EventStream<A> tap(EventStream<A> as, EventStreamSubscriber<A> effect){
+        return new TapEventStream<>( as,effect );
+    }
+
     public Stream<A> evaluate() {
         final ArrayList<A> list = new ArrayList<>();
         OpenEventStream<A> a = open( EventStreamSubscriber.create( new EventStreamHandler<A>() {
@@ -210,6 +214,10 @@ public abstract class EventStream<A> {
 
     public EventStream<A> andThen(EventStream<A> eventual) {
         return new AndThenEventStream<>( this, eventual );
+    }
+
+    public EventStream<A> tap(EventStreamSubscriber<A> effect){
+        return tap(this,effect);
     }
 
 

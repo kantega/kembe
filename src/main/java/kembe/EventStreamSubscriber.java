@@ -17,7 +17,7 @@ public abstract class EventStreamSubscriber<A> {
     public static <A> EventStreamSubscriber<A> create(final Effect<StreamEvent<A>> handler) {
         return new EventStreamSubscriber<A>() {
             @Override public void e(StreamEvent<A> aStreamEvent) {
-                handler.e(aStreamEvent);
+                handler.e( aStreamEvent );
             }
         };
     }
@@ -74,7 +74,11 @@ public abstract class EventStreamSubscriber<A> {
     }
 
     public void next(A a) {
-        e( StreamEvent.next( a ) );
+        try {
+            e( StreamEvent.next( a ) );
+        } catch (Exception e) {
+            error( e );
+        }
     }
 
     public void error(Exception e) {
@@ -96,7 +100,7 @@ public abstract class EventStreamSubscriber<A> {
     public <B> EventStreamSubscriber<B> comapEvent(final F<StreamEvent<B>, StreamEvent<A>> f) {
         return new EventStreamSubscriber<B>() {
             @Override public void e(StreamEvent<B> event) {
-                EventStreamSubscriber.this.e( f.f(event) );
+                EventStreamSubscriber.this.e( f.f( event ) );
             }
         };
     }
