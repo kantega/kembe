@@ -34,7 +34,7 @@ public abstract class Scheduler {
     public static Scheduler instantScheduler() {
         return new Scheduler() {
 
-            Actor<Timed<SchedulerTask>> actor = orderedActor( Strategy.<Unit>executorStrategy( Executors.newSingleThreadExecutor() ), Timed.<SchedulerTask>timedOrd(), new Effect<Timed<SchedulerTask>>() {
+            Actor<Timed<SchedulerTask>> actor = orderedActor( Strategy.<Unit>executorStrategy( Executors.newFixedThreadPool(4) ), Timed.<SchedulerTask>timedOrd(), new Effect<Timed<SchedulerTask>>() {
                 @Override public void e(Timed<SchedulerTask> task) {
                     task.value.run( task.time );
                 }
