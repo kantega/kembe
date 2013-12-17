@@ -4,7 +4,9 @@ import fj.Effect;
 import fj.F;
 import fj.P1;
 import fj.Show;
-import fj.data.*;
+import fj.data.Either;
+import fj.data.Stream;
+import fj.data.Validation;
 import kembe.stream.*;
 import kembe.util.Functions;
 import kembe.util.Split;
@@ -31,7 +33,15 @@ public abstract class EventStream<A> {
             }
         };
     }
-
+/*
+    public static <A> EventStream<A> fromIterator(final Iterator<A> iterator){
+        return new EventStream<A>() {
+            @Override public OpenEventStream<A> open(EventStreamSubscriber<A> subscriber) {
+                return null;
+            }
+        };
+    }
+*/
     public static <A> F<Stream<A>, EventStream<A>> fromStream() {
         return new F<Stream<A>, EventStream<A>>() {
             @Override public EventStream<A> f(Stream<A> as) {
