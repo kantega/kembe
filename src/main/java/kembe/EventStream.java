@@ -12,6 +12,7 @@ import kembe.util.Functions;
 import kembe.util.Split;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 
 public abstract class EventStream<A> {
@@ -33,15 +34,27 @@ public abstract class EventStream<A> {
             }
         };
     }
-/*
+
+    public static <A> EventStream<A> fromIterable(final Iterable<A> iterable){
+        return fromIterator( iterable.iterator() );
+    }
+
     public static <A> EventStream<A> fromIterator(final Iterator<A> iterator){
         return new EventStream<A>() {
             @Override public OpenEventStream<A> open(EventStreamSubscriber<A> subscriber) {
-                return null;
+                try{
+                while(iterator.hasNext()){
+                    subscriber.next( iterator.next() );
+                }}catch (Exception e){
+                    subscriber.error( e );
+                }
+                subscriber.done();
+
+                return OpenEventStream.noOp( this );
             }
         };
     }
-*/
+
     public static <A> F<Stream<A>, EventStream<A>> fromStream() {
         return new F<Stream<A>, EventStream<A>>() {
             @Override public EventStream<A> f(Stream<A> as) {
@@ -50,7 +63,7 @@ public abstract class EventStream<A> {
         };
     }
 
-    public static <A> F<A, EventStream<A>> fromStream(F<A, Stream<A>> f) {
+    public static <A> F<A, EventStream<A>> fromStream(F <A, Stream<A>> f) {
         return f.andThen( EventStream.<A>fromStream() );
     }
 
