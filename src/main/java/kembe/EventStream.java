@@ -193,17 +193,19 @@ public abstract class EventStream<A> {
         return EventStream.validation( this.map(f), Shows.exceptionShow );
     }
 
-    public <B> EventStream<B> mapStateful(final Mealy<A, B> f) {
-        return EventStream.mapStateful( this, f );
-    }
 
-    public <B> EventStream<B> flattenOption(final F<A,Option<B>> f){
+    public <B> EventStream<B> mapO(final F<A,Option<B>> f){
         return new FlattenIterableEventStream<A,B>( this,f.andThen(new F<Option<B>, Iterable<B>>() {
             @Override public Iterable<B> f(Option<B> bs) {
                 return bs;
             }
         }) );
     }
+
+    public <B> EventStream<B> mapStateful(final Mealy<A, B> f) {
+        return EventStream.mapStateful( this, f );
+    }
+
 
     public <B> EventStream<B> rawMap(final F<StreamEvent<A>, StreamEvent<B>> f) {
         return new RawMappedEventStream<>( this, f );
