@@ -25,6 +25,12 @@ public class Shows {
         }
     } );
 
+    public static final Show<Exception> exceptionShow = Show.showS( new F<Exception, String>() {
+        @Override public String f(Exception e) {
+            return e.getMessage();
+        }
+    } );
+
     public static <T> Show<T> reflectionShow(){
         return Show.showS( new F<T, String>() {
             @Override public String f(T t) {
@@ -49,5 +55,6 @@ public class Shows {
             }
         } );
     }
+
 
 }

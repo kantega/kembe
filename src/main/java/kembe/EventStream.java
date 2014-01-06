@@ -5,13 +5,14 @@ import fj.F;
 import fj.P1;
 import fj.Show;
 import fj.data.Either;
+import fj.data.Option;
 import fj.data.Stream;
 import fj.data.Validation;
 import kembe.stream.*;
 import kembe.util.Functions;
+import kembe.util.Shows;
 import kembe.util.Split;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 
 
@@ -178,25 +179,6 @@ public abstract class EventStream<A> {
         return new TapEventStream<>( as,effect );
     }
 
-    public Stream<A> evaluate() {
-        final ArrayList<A> list = new ArrayList<>();
-        OpenEventStream<A> a = open( EventStreamSubscriber.create( new EventStreamHandler<A>() {
-            @Override public void next(A a) {
-                list.add( a );
-            }
-
-            @Override public void error(Exception e) {
-
-            }
-
-            @Override public void done() {
-
-            }
-        } ) );
-        a.close();
-        return Stream.iterableStream( list );
-    }
-
     public abstract OpenEventStream<A> open(EventStreamSubscriber<A> subscriber);
 
     public EventStream<A> filter(final F<A, Boolean> pred) {
@@ -207,8 +189,20 @@ public abstract class EventStream<A> {
         return new MappedEventStream<>( this, f );
     }
 
+    public <B> EventStream<B> mapV(final F<A,Validation<Exception,B>> f){
+        return EventStream.validation( this.map(f), Shows.exceptionShow );
+    }
+
     public <B> EventStream<B> mapStateful(final Mealy<A, B> f) {
         return EventStream.mapStateful( this, f );
+    }
+
+    public <B> EventStream<B> flattenOption(final F<A,Option<B>> f){
+        return new FlattenIterableEventStream<A,B>( this,f.andThen(new F<Option<B>, Iterable<B>>() {
+            @Override public Iterable<B> f(Option<B> bs) {
+                return bs;
+            }
+        }) );
     }
 
     public <B> EventStream<B> rawMap(final F<StreamEvent<A>, StreamEvent<B>> f) {
@@ -227,6 +221,10 @@ public abstract class EventStream<A> {
         return bindStateful( this, f );
     }
 
+    public  EventStream<A> injectStateful(final Mealy<StreamEvent<A>, Iterable<StreamEvent<A>>> f) {
+        return new FlattenRawIterableStatefulEventStream<>( this, f );
+    }
+
     public <B> EventStream<Either<A, B>> or(EventStream<B> other) {
         return or( this, other );
     }
@@ -242,6 +240,5 @@ public abstract class EventStream<A> {
     public EventStream<A> tap(EventStreamSubscriber<A> effect){
         return tap(this,effect);
     }
-
 
 }
