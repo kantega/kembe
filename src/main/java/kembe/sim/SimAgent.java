@@ -1,6 +1,9 @@
 package kembe.sim;
 
+import fj.Ord;
 import fj.data.List;
+import fj.data.TreeMap;
+import kembe.sim.SimEvent.SimEventBuilder;
 import kembe.sim.rand.Rand;
 import kembe.sim.stat.Draw;
 
@@ -19,11 +22,11 @@ public abstract class SimAgent {
         return Draw.only( step );
     }
 
-    protected Step sleep(RandWait sleep, String name, SimEvent.SimEventF... events) {
+    protected Step sleep(RandWait sleep, String name, SimEventBuilder... events) {
         return Step.sleep( sleep, name, this ).emit( List.list( events ) );
     }
 
-    protected Step sleep(RandWait sleep, String name, Signal prev, SimEvent.SimEventF... events) {
+    protected Step sleep(RandWait sleep, String name, Signal prev, SimEventBuilder... events) {
         return Step.sleep( sleep, name,prev, this ).emit( List.list( events ) );
     }
 
@@ -31,16 +34,12 @@ public abstract class SimAgent {
         return Step.send( msgs, this );
     }
 
-    protected Step send(Signal msg, SimEvent.SimEventF... events) {
+    protected Step send(Signal msg, SimEventBuilder... events) {
         return send( List.single( msg ) ).emit( List.list( events ) );
     }
 
-    protected SimEvent.SimEventF event(final String name) {
-        return new SimEvent.SimEventF() {
-            @Override public SimEvent f(SimAgentContext ctx) {
-                return SimEvent.newEvent( name, ctx.id );
-            }
-        };
+    protected SimEventBuilder event(final String name) {
+        return new SimEventBuilder( name, TreeMap.empty( Ord.stringOrd) );
 
     }
 

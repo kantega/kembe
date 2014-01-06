@@ -5,6 +5,7 @@ import fj.F;
 import fj.data.List;
 import kembe.*;
 import kembe.sim.*;
+import kembe.sim.SimEvent.SimEventBuilder;
 import kembe.sim.rand.Rand;
 import org.joda.time.Instant;
 
@@ -138,8 +139,8 @@ public class SimulationRunner {
 
                 agents.put( context.id, step.nextHandler );
 
-                step.emittedEvents.foreach( new Effect<SimEvent.SimEventF>() {
-                    @Override public void e(SimEvent.SimEventF simEvent) {
+                step.emittedEvents.foreach( new Effect<SimEventBuilder>() {
+                    @Override public void e(SimEventBuilder simEvent) {
                         listener.e( StreamEvent.next( new Timed<>( time, simEvent.f( context ) ) ) );
                     }
                 } );
