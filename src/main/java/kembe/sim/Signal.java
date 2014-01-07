@@ -84,8 +84,12 @@ public class Signal {
         return signalFollowing( previous, replyToId, msg );
     }
 
-    public static SignalBuilder toSelf(String msg) {
+    public static SignalBuilder newToSelf(String msg) {
         return new SignalBuilder( msg, Option.<AgentId>none(), Option.<Signal>none(), TreeMap.<String, Object>empty( Ord.stringOrd ) );
+    }
+
+    public static SignalBuilder toSelf(String msg,Signal prev) {
+        return new SignalBuilder( msg, Option.<AgentId>none(), Option.some(prev), TreeMap.<String, Object>empty( Ord.stringOrd ) );
     }
 
     private static AgentId sender(AgentId receiver, Signal signal) {
@@ -116,6 +120,10 @@ public class Signal {
 
     public SignalBuilder reply(String msg) {
         return reply( this, msg );
+    }
+
+    public SignalBuilder toSelf(String msg){
+        return Signal.toSelf( msg,this );
     }
 
     public List<Signal> toList() {
