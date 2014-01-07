@@ -56,9 +56,9 @@ public class Signal {
 
     public final Option<Signal> prev;
 
-    public final TreeMap<String, String> params;
+    public final TreeMap<String, Object> params;
 
-    public Signal(UUID id, AgentId to, AgentId from, String msg, Option<Signal> prev, TreeMap<String, String> params) {
+    public Signal(UUID id, AgentId to, AgentId from, String msg, Option<Signal> prev, TreeMap<String, Object> params) {
         this.id = id;
         this.to = to;
         this.from = from;
@@ -67,29 +67,25 @@ public class Signal {
         this.params = params;
     }
 
-    public static Signal signal(AgentId to, AgentId from, String msg) {
-        return new Signal( UUID.randomUUID(), to, from, msg, Option.<Signal>none(), TreeMap.<String, String>empty( Ord.stringOrd ) );
+    public static Signal newSignal(AgentId to, AgentId from, String msg) {
+        return new Signal( UUID.randomUUID(), to, from, msg, Option.<Signal>none(), TreeMap.<String, Object>empty( Ord.stringOrd ) );
     }
 
-    public static Signal signalFollowing(Signal previous, AgentId to, String msg) {
-        return new Signal( UUID.randomUUID(), to, previous.to, msg, Option.some( previous ), TreeMap.<String, String>empty( Ord.stringOrd ) );
+    public static SignalBuilder signal(AgentId to, String msg) {
+        return new SignalBuilder( msg, Option.some( to ), Option.<Signal>none(), TreeMap.<String, Object>empty( Ord.stringOrd ) );
     }
 
-    public static Signal reply(Signal previous, String msg) {
-        AgentId replyToId = sender(previous.to,previous);
+    public static SignalBuilder signalFollowing(Signal previous, AgentId to, String msg) {
+        return new SignalBuilder( msg, Option.some( to ), Option.some( previous ), TreeMap.<String, Object>empty( Ord.stringOrd ) );
+    }
+
+    public static SignalBuilder reply(Signal previous, String msg) {
+        AgentId replyToId = sender( previous.to, previous );
         return signalFollowing( previous, replyToId, msg );
     }
 
-    public static F<Signal, Boolean> msgEquals(final String msg) {
-        return new F<Signal, Boolean>() {
-            @Override public Boolean f(Signal signal) {
-                return signal.msg.equals( msg );
-            }
-        };
-    }
-
-    public static Option<Signal> toSignal(Either<Signal, Signal> m) {
-        return m.right().toOption();
+    public static SignalBuilder toSelf(String msg) {
+        return new SignalBuilder( msg, Option.<AgentId>none(), Option.<Signal>none(), TreeMap.<String, Object>empty( Ord.stringOrd ) );
     }
 
     private static AgentId sender(AgentId receiver, Signal signal) {
@@ -103,22 +99,22 @@ public class Signal {
 
     }
 
-    public Signal follow(AgentId to, String msg) {
+    public SignalBuilder follow(AgentId to, String msg) {
         return Signal.signalFollowing( this, to, msg );
     }
 
-    public TreeMap<String, String> allParams() {
-        return prev.option( params, new F<Signal, TreeMap<String, String>>() {
-            @Override public TreeMap<String, String> f(Signal signal) {
+    public TreeMap<String, Object> allParams() {
+        return prev.option( params, new F<Signal, TreeMap<String, Object>>() {
+            @Override public TreeMap<String, Object> f(Signal signal) {
                 //Ugh,Treemap does not have an addAll
-                Map<String, String> mm = Signal.this.params.toMutableMap();
+                Map<String, Object> mm = Signal.this.params.toMutableMap();
                 mm.putAll( signal.allParams().toMutableMap() );
                 return TreeMap.fromMutableMap( Ord.stringOrd, mm );
             }
         } );
     }
 
-    public Signal reply(String msg) {
+    public SignalBuilder reply(String msg) {
         return reply( this, msg );
     }
 
@@ -137,5 +133,31 @@ public class Signal {
                 ')';
     }
 
-    public static abstract class SignalF extends F<SimAgentContext,Signal>{}
+    public static class SignalBuilder extends F<SimAgentContext, Signal> {
+
+        private final String name;
+
+        private final Option<AgentId> to;
+
+        private final Option<Signal> prev;
+
+        private final TreeMap<String, Object> properties;
+
+        public SignalBuilder(String name, Option<AgentId> to, Option<Signal> prev, TreeMap<String, Object> properties) {
+            this.name = name;
+            this.to = to;
+            this.prev = prev;
+            this.properties = properties;
+        }
+
+        public SignalBuilder with(String key, Object value) {
+            return new SignalBuilder( name, to, prev, properties.set( key, value ) );
+        }
+
+        @Override public Signal f(SimAgentContext simAgentContext) {
+            return new Signal( UUID.randomUUID(), to.orSome( simAgentContext.id ), simAgentContext.id, name, prev, properties );
+        }
+
+
+    }
 }

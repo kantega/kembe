@@ -26,17 +26,17 @@ public class SimulatorTest {
                 @Override public Rand<Step> act(Signal s, SimAgentContext ctx) {
                     if (s.msg.equals( "send" ))
                         return just( send(
-                                signal( AgentId.idFromString( "testHandler" ), ctx.id, "GET to the chopper" ),
+                                signal( AgentId.idFromString( "testHandler" ), "GET to the chopper" ),
                                 event( "Request sent" ) ) );
 
                     else if (s.msg.startsWith( "OK" ))
                         return just( sleep(
-                                waitForAtLeast( Seconds.ONE ), "retry",
+                                waitForAtLeast( Seconds.ONE ), Signal.toSelf( "retry" ),
                                 event( "Reply received" ) ) );
 
                     else
-                        return alt( 5, sleep( waitFor( Seconds.ONE ), "send" ) )
-                                .or( 5, sleep( waitFor( Seconds.ONE ), "retry" ) );
+                        return alt( 5, sleep( waitFor( Seconds.ONE ), Signal.toSelf( "send" ) ) )
+                                .or( 5, sleep( waitFor( Seconds.ONE ), Signal.toSelf( "retry" ) ) );
                 }
             };
 
@@ -44,12 +44,12 @@ public class SimulatorTest {
             new SimAgent() {
                 @Override public Rand<Step> act(Signal signal, SimAgentContext ctx) {
                     if (signal.msg.startsWith( "GET" ))
-                        return just( sleep( waitForAtLeast( Duration.millis( 5 ) ), "doReply", signal ) );
+                        return just( sleep( waitForAtLeast( Duration.millis( 5 ) ), Signal.reply( signal, "doReply" ) ) );
 
                     if (signal.msg.equals( "doReply" ))
                         return just( send( signal.reply( "OK" ) ) );
 
-                    return just( sleep( waitFor( Seconds.ONE ), "noop" ) );
+                    return just( sleep( waitFor( Seconds.ONE ), Signal.toSelf( "noop") ) );
                 }
             };
 

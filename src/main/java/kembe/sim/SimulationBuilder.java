@@ -38,7 +38,7 @@ public class SimulationBuilder {
 
         List<Signal> startSignals = List.iterableList( agents.keySet() ).map( new F<AgentId, Signal>() {
             @Override public Signal f(AgentId agentId) {
-                return Signal.signal( agentId, agentId, startSignal );
+                return Signal.newSignal( agentId, agentId, startSignal );
             }
         } );
 
@@ -49,7 +49,7 @@ public class SimulationBuilder {
 
         List<Signal> startSignals = List.iterableList( agents.keySet() ).map( new F<AgentId, Signal>() {
             @Override public Signal f(AgentId agentId) {
-                return Signal.signal( agentId, agentId, startSignal );
+                return Signal.newSignal( agentId, agentId, startSignal );
             }
         } );
 

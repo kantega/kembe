@@ -5,6 +5,7 @@ import fj.F;
 import fj.data.List;
 import kembe.*;
 import kembe.sim.*;
+import kembe.sim.Signal.SignalBuilder;
 import kembe.sim.SimEvent.SimEventBuilder;
 import kembe.sim.rand.Rand;
 import org.joda.time.Instant;
@@ -92,13 +93,14 @@ public class SimulationRunner {
                                                 signalOccurring.randomSleep.after( ctx.currentTime ).next( random ),
                                                 signalOccurring.value.f( ctx ) ) );
                             }
-                        }, new F<List<Signal>, List<Timed<Signal>>>() {
-                            @Override public List<Timed<Signal>> f(List<Signal> messages) {
-                                return messages.map( new F<Signal, Timed<Signal>>() {
-                                    @Override public Timed<Signal> f(Signal signal) {
+                        },
+                        new F<List<SignalBuilder>, List<Timed<Signal>>>() {
+                            @Override public List<Timed<Signal>> f(List<SignalBuilder> messages) {
+                                return messages.map( new F<SignalBuilder, Timed<Signal>>() {
+                                    @Override public Timed<Signal> f(SignalBuilder signal) {
                                         return new Timed<>(
                                                 Time.quantumIncrement( ctx.currentTime ),
-                                                signal );
+                                                signal.f( ctx ) );
                                     }
                                 } );
                             }
@@ -150,8 +152,8 @@ public class SimulationRunner {
                         .map( scheduleTask( listener ) )
                         .foreach( scheduler.toEffect() );
 
-            } catch (Exception e) {
-                listener.e( StreamEvent.<Timed<SimEvent>>error( e ) );
+            } catch (Throwable e) {
+                listener.e( StreamEvent.<Timed<SimEvent>>error( new Exception( "Error during execution of simulation", e ) ) );
             }
         }
 

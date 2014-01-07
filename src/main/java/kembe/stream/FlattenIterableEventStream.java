@@ -3,7 +3,7 @@ package kembe.stream;
 import fj.F;
 import kembe.*;
 
-public class FlattenIterableEventStream<A,B> extends EventStream<B> {
+public class FlattenIterableEventStream<A, B> extends EventStream<B> {
 
     private final F<A, Iterable<B>> f;
 
@@ -19,7 +19,11 @@ public class FlattenIterableEventStream<A,B> extends EventStream<B> {
                 source.open( EventStreamSubscriber.create( new EventStreamHandler<A>() {
                     @Override public void next(A a) {
                         for (B e : f.f( a )) {
-                            effect.next( e );
+                            try {
+                                effect.next( e );
+                            } catch (Exception ex) {
+                                error( ex );
+                            }
                         }
                     }
 

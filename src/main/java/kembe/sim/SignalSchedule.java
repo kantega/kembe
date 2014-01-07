@@ -1,12 +1,14 @@
 package kembe.sim;
 
+import kembe.sim.Signal.SignalBuilder;
+
 public class SignalSchedule {
 
     public final RandWait randomSleep;
 
-    public final Signal.SignalF value;
+    public final SignalBuilder value;
 
-    public SignalSchedule(RandWait randomSleep, Signal.SignalF value) {
+    public SignalSchedule(RandWait randomSleep, SignalBuilder value) {
         this.randomSleep = randomSleep;
         this.value = value;
     }
