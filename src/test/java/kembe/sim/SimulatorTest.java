@@ -31,12 +31,12 @@ public class SimulatorTest {
 
                     else if (s.msg.startsWith( "OK" ))
                         return just( sleep(
-                                waitForAtLeast( Seconds.ONE ), Signal.toSelf( "retry" ),
+                                waitForAtLeast( Seconds.ONE ), Signal.newToSelf( "retry" ),
                                 event( "Reply received" ) ) );
 
                     else
-                        return alt( 5, sleep( waitFor( Seconds.ONE ), Signal.toSelf( "send" ) ) )
-                                .or( 5, sleep( waitFor( Seconds.ONE ), Signal.toSelf( "retry" ) ) );
+                        return alt( 5, sleep( waitFor( Seconds.ONE ), Signal.newToSelf( "send" ) ) )
+                                .or( 5, sleep( waitFor( Seconds.ONE ), Signal.newToSelf( "retry" ) ) );
                 }
             };
 
@@ -49,7 +49,7 @@ public class SimulatorTest {
                     if (signal.msg.equals( "doReply" ))
                         return just( send( signal.reply( "OK" ) ) );
 
-                    return just( sleep( waitFor( Seconds.ONE ), Signal.toSelf( "noop") ) );
+                    return just( sleep( waitFor( Seconds.ONE ), Signal.newToSelf( "noop") ) );
                 }
             };
 
