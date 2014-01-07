@@ -179,6 +179,10 @@ public abstract class EventStream<A> {
         return new TapEventStream<>( as,effect );
     }
 
+    public static <A> EventStreamFork<A> fork(EventStream<A> stream){
+        return new EventStreamFork<A>(stream);
+    }
+
     public abstract OpenEventStream<A> open(EventStreamSubscriber<A> subscriber);
 
     public EventStream<A> filter(final F<A, Boolean> pred) {
@@ -241,6 +245,10 @@ public abstract class EventStream<A> {
 
     public EventStream<A> tap(EventStreamSubscriber<A> effect){
         return tap(this,effect);
+    }
+
+    public EventStreamFork<A> fork(){
+        return EventStream.fork( this );
     }
 
 }
