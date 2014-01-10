@@ -10,6 +10,7 @@ import kembe.EventStream;
 import kembe.EventStreamSubscriber;
 import kembe.OpenEventStream;
 import kembe.StreamEvent;
+import kembe.util.Actors;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -65,7 +66,7 @@ public class AndThenEventStream<A> extends EventStream<A> {
                             );
 
                     final Actor<Either<StreamEvent<A>, StreamEvent<A>>> actor =
-                            Actor.queueActor( Strategy.<Unit>seqStrategy(),new Effect<Either<StreamEvent<A>, StreamEvent<A>>>() {
+                            Actors.stackSafeQueueActor( Strategy.<Unit>seqStrategy(), new Effect<Either<StreamEvent<A>, StreamEvent<A>>>() {
                                 @Override public void e(Either<StreamEvent<A>, StreamEvent<A>> event) {
                                     if (event.isLeft()) {
                                         firstHandler.e( event.left().value() );
