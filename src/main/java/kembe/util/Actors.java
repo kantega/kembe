@@ -75,14 +75,9 @@ public class Actors {
             P1<Unit> processor = new P1<Unit>() {
                 @Override public Unit _1() {
                     // get next item from queue
-                    while (!mbox.isEmpty()){
+                    while (!mbox.isEmpty()) {
                         T a = mbox.poll();
-                        // if there is one, process it
-                        if (a != null) {
-                            ea.e( a );
-                            // try again, in case there are more messages
-                            s.par( this );
-                        }
+                        ea.e( a );
                     }
                     // clear the lock
                     suspended.set( true );
