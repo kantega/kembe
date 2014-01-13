@@ -154,7 +154,11 @@ public abstract class StreamEvent<A> {
         }
 
         @Override public void effect(Effect<Next<A>> onNext, Effect<Error<A>> onError, Effect<Done<A>> onDone) {
+            try{
             onNext.e( this );
+            }catch (Throwable t){
+                onError.e( StreamEvent.<A>error( new Exception( "Exception throws while calling onNext",t ) ) );
+            }
         }
 
         @Override
