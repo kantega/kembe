@@ -40,7 +40,7 @@ public abstract class RandWait {
             @Override public Rand<DateTime> after(final DateTime dt) {
 
                 DateTime fromInstant = Time.next( from, dt );
-                DateTime toInstant = Time.next( to, dt );
+                DateTime toInstant = Time.next( to, fromInstant );
 
                 return within( Time.from( fromInstant ).until( toInstant ) );
             }
