@@ -74,8 +74,8 @@ public class Time {
         return instant.toInstant().toDateTime().toDateMidnight().toDateTime().plusDays( 1 );
     }
 
-    public static DateTime next(LocalTime time, Instant instant) {
-        DateTime dt = instant.toDateTime().withFields( time );
+    public static DateTime next(LocalTime time, ReadableInstant instant) {
+        DateTime dt = instant.toInstant().toDateTime().withFields( time );
 
         return dt.isAfter( instant )
                ? dt
