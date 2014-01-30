@@ -39,7 +39,13 @@ public abstract class RandWait {
         return new RandWait() {
             @Override public Rand<Instant> after(final Instant instant) {
 
-                return within( Time.from( Time.next( from, instant ) ).until( Time.next( to, instant ) ) );
+                DateTime fromInstant = Time.next( from, instant );
+                DateTime todayTo = Time.next( to, instant );
+                DateTime toInstant = todayTo.isAfter( fromInstant )
+                                     ? todayTo
+                                     : todayTo.plusDays( 1 );
+
+                return within( Time.from( fromInstant ).until( toInstant ) );
             }
         };
     }
@@ -56,7 +62,7 @@ public abstract class RandWait {
         };
     }
 
-    public static RandWait waitFor(final ReadablePeriod p){
+    public static RandWait waitFor(final ReadablePeriod p) {
         return waitFor( p.toPeriod().toStandardDuration() );
     }
 
@@ -75,7 +81,8 @@ public abstract class RandWait {
             }
         };
     }
-    public static RandWait waitForAtLeast(final ReadablePeriod p){
+
+    public static RandWait waitForAtLeast(final ReadablePeriod p) {
         return waitForAtLeast( p.toPeriod().toStandardDuration() );
     }
 
