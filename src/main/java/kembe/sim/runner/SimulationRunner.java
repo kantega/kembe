@@ -3,12 +3,15 @@ package kembe.sim.runner;
 import fj.Effect;
 import fj.F;
 import fj.data.List;
-import kembe.*;
+import kembe.EventStream;
+import kembe.EventStreamSubscriber;
+import kembe.OpenEventStream;
+import kembe.StreamEvent;
 import kembe.sim.*;
 import kembe.sim.Signal.SignalBuilder;
 import kembe.sim.SimEvent.SimEventBuilder;
 import kembe.sim.rand.Rand;
-import org.joda.time.Instant;
+import org.joda.time.DateTime;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -16,9 +19,9 @@ import java.util.Random;
 
 public class SimulationRunner {
 
-    private final Instant startTime;
+    private final DateTime startTime;
 
-    private final Instant endTime;
+    private final DateTime endTime;
 
     private final Random random;
 
@@ -26,7 +29,7 @@ public class SimulationRunner {
 
     private HashMap<AgentId, SimAgent> agents;
 
-    public SimulationRunner(Instant startTime, Instant endTime, Random random, HashMap<AgentId, SimAgent> agents, Scheduler scheduler) {
+    public SimulationRunner(DateTime startTime, DateTime endTime, Random random, HashMap<AgentId, SimAgent> agents, Scheduler scheduler) {
         this.random = random;
         this.agents = agents;
         this.startTime = startTime;
@@ -39,7 +42,7 @@ public class SimulationRunner {
             @Override public OpenEventStream<Timed<SimEvent>> open(final EventStreamSubscriber<Timed<SimEvent>> effect) {
 
                 scheduler.scheduleAt( startTime, new SchedulerTask() {
-                    @Override public void run(Instant time) {
+                    @Override public void run(DateTime time) {
                         startSignals
                                 .map( Timed.<Signal>timed( startTime ) )
                                 .map( scheduleTask( effect ) )
@@ -48,8 +51,8 @@ public class SimulationRunner {
                 } );
 
 
-                scheduler.scheduleAt( Time.quantumIncrement( endTime ), new SchedulerTask() {
-                    @Override public void run(Instant time) {
+                scheduler.scheduleAt( endTime.plusMillis( 1 ), new SchedulerTask() {
+                    @Override public void run(DateTime time) {
                         effect.e( StreamEvent.<Timed<SimEvent>>done() );
                     }
                 } );
@@ -99,7 +102,7 @@ public class SimulationRunner {
                                 return messages.map( new F<SignalBuilder, Timed<Signal>>() {
                                     @Override public Timed<Signal> f(SignalBuilder signal) {
                                         return new Timed<>(
-                                                Time.quantumIncrement( ctx.currentTime ),
+                                                ctx.currentTime.plusMillis( 1 ),
                                                 signal.f( ctx ) );
                                     }
                                 } );
@@ -127,7 +130,7 @@ public class SimulationRunner {
             this.signal = signal;
         }
 
-        @Override public void run(final Instant time) {
+        @Override public void run(final DateTime time) {
             try {
 
                 final SimAgentContext context =
@@ -148,7 +151,7 @@ public class SimulationRunner {
                 } );
 
                 invocations
-                        .filter( Timed.<Signal>isBeforeOrEqual( endTime ) )
+                        .filter( Timed.<Signal>isBeforeOrEqual( endTime.toInstant() ) )
                         .map( scheduleTask( listener ) )
                         .foreach( scheduler.toEffect() );
 

@@ -11,11 +11,11 @@ import java.util.Random;
 public abstract class RandWait {
 
 
-    public static RandWait waitUntil(final Instant instant) {
+    public static RandWait waitUntil(final DateTime instant) {
         return new RandWait() {
-            @Override public Rand<Instant> after(final Instant i) {
-                return new Rand<Instant>() {
-                    @Override public Instant next(Random t) {
+            @Override public Rand<DateTime> after(final DateTime dt) {
+                return new Rand<DateTime>() {
+                    @Override public DateTime next(Random t) {
                         return instant;
                     }
                 };
@@ -25,10 +25,10 @@ public abstract class RandWait {
 
     public static RandWait waitUntil(final LocalTime localTime) {
         return new RandWait() {
-            @Override public Rand<Instant> after(final Instant instant) {
-                return new Rand<Instant>() {
-                    @Override public Instant next(Random t) {
-                        return Time.next( localTime, instant ).toInstant();
+            @Override public Rand<DateTime> after(final DateTime dt) {
+                return new Rand<DateTime>() {
+                    @Override public DateTime next(Random t) {
+                        return Time.next( localTime, dt );
                     }
                 };
             }
@@ -37,10 +37,10 @@ public abstract class RandWait {
 
     public static RandWait waitUntilBetween(final LocalTime from, final LocalTime to) {
         return new RandWait() {
-            @Override public Rand<Instant> after(final Instant instant) {
+            @Override public Rand<DateTime> after(final DateTime dt) {
 
-                DateTime fromInstant = Time.next( from, instant );
-                DateTime toInstant = Time.next( to, fromInstant );
+                DateTime fromInstant = Time.next( from, dt );
+                DateTime toInstant = Time.next( to, dt );
 
                 return within( Time.from( fromInstant ).until( toInstant ) );
             }
@@ -49,10 +49,10 @@ public abstract class RandWait {
 
     public static RandWait waitFor(final Duration dur) {
         return new RandWait() {
-            @Override public Rand<Instant> after(final Instant i) {
-                return new Rand<Instant>() {
-                    @Override public Instant next(Random t) {
-                        return i.plus( dur );
+            @Override public Rand<DateTime> after(final DateTime dt) {
+                return new Rand<DateTime>() {
+                    @Override public DateTime next(Random t) {
+                        return dt.plus( dur );
                     }
                 };
             }
@@ -65,16 +65,16 @@ public abstract class RandWait {
 
     public static RandWait waitForBetween(final Duration min, final Duration max) {
         return new RandWait() {
-            @Override public Rand<Instant> after(final Instant i) {
-                return within( Time.from( i.plus( min ) ).until( i.plus( max ) ) );
+            @Override public Rand<DateTime> after(final DateTime dt) {
+                return within( Time.from( dt.plus( min ) ).until( dt.plus( max ) ) );
             }
         };
     }
 
     public static RandWait waitAtMost(final Duration dur) {
         return new RandWait() {
-            @Override public Rand<Instant> after(final Instant i) {
-                return within( Time.from( i ).lasting( dur ) );
+            @Override public Rand<DateTime> after(final DateTime dt) {
+                return within( Time.from( dt ).lasting( dur ) );
             }
         };
     }
@@ -83,15 +83,16 @@ public abstract class RandWait {
         return waitAtMost( p.toPeriod().toStandardDuration() );
     }
 
-    private static Rand<Instant> within(final Interval interval) {
-        Rand<Instant> rg = new Rand<Instant>() {
+    private static Rand<DateTime> within(final Interval interval) {
+        Rand<DateTime> rg = new Rand<DateTime>() {
 
-            @Override public Instant next(Random random) {
-                return Rand.randomDouble().map( new F<DoubleFromZeroIncToOne, Instant>() {
+            @Override public DateTime next(Random random) {
+                return Rand.randomDouble().map( new F<DoubleFromZeroIncToOne, DateTime>() {
                     @Override
-                    public Instant f(DoubleFromZeroIncToOne d) {
-                        long fraction = (long) (interval.toDurationMillis() * d.value);
-                        return new Instant( interval.getStartMillis() + fraction );
+                    public DateTime f(DoubleFromZeroIncToOne d) {
+                        long fraction = (long)(interval.toDurationMillis() * d.value);
+                        Duration duration = new Duration( fraction );
+                        return interval.getStart().plus( duration );
                     }
                 } ).next( random );
             }
@@ -100,5 +101,5 @@ public abstract class RandWait {
         return rg;
     }
 
-    public abstract Rand<Instant> after(Instant instant);
+    public abstract Rand<DateTime> after(DateTime dateTime);
 }

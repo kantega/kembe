@@ -7,14 +7,15 @@ import fj.data.Stream;
 import kembe.Time;
 import kembe.util.Functions;
 import kembe.util.Shows;
+import org.joda.time.DateTime;
 import org.joda.time.Instant;
 
 public class Timed<T> {
 
-    public final Instant time;
+    public final DateTime time;
     public final T value;
 
-    public Timed(Instant time, T value) {
+    public Timed(DateTime time, T value) {
         this.time = time;
         this.value = value;
     }
@@ -27,7 +28,7 @@ public class Timed<T> {
         } );
     }
 
-    public static <T> F<T,Timed<T>> timed(final Instant time){
+    public static <T> F<T,Timed<T>> timed(final DateTime time){
         return new F<T, Timed<T>>() {
             @Override public Timed<T> f(T t) {
                 return new Timed(time,t);

@@ -6,7 +6,7 @@ import fj.data.List;
 import kembe.EventStream;
 import kembe.sim.runner.Scheduler;
 import kembe.sim.runner.SimulationRunner;
-import org.joda.time.Instant;
+import org.joda.time.DateTime;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -34,7 +34,7 @@ public class SimulationBuilder {
         return this;
     }
 
-    public EventStream<Timed<SimEvent>> instant(Instant start, Instant stop, Random random, final String startSignal) {
+    public EventStream<Timed<SimEvent>> instant(DateTime start, DateTime stop, Random random, final String startSignal) {
 
         List<Signal> startSignals = List.iterableList( agents.keySet() ).map( new F<AgentId, Signal>() {
             @Override public Signal f(AgentId agentId) {
@@ -45,7 +45,7 @@ public class SimulationBuilder {
         return new SimulationRunner( start, stop, random, agents, Scheduler.instantScheduler() ).eventStream( startSignals );
     }
 
-    public EventStream<Timed<SimEvent>> realtime(Instant start, Instant stop, Random random, final String startSignal) {
+    public EventStream<Timed<SimEvent>> realtime(DateTime start, DateTime stop, Random random, final String startSignal) {
 
         List<Signal> startSignals = List.iterableList( agents.keySet() ).map( new F<AgentId, Signal>() {
             @Override public Signal f(AgentId agentId) {

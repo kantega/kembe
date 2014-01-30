@@ -5,7 +5,7 @@ import fj.control.parallel.Actor;
 import fj.control.parallel.Strategy;
 import kembe.sim.Timed;
 import kembe.util.Order;
-import org.joda.time.Instant;
+import org.joda.time.DateTime;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -21,7 +21,7 @@ public abstract class Scheduler {
 
             Timer service = new Timer();
 
-            @Override public void scheduleAt(final Instant time, final SchedulerTask task) {
+            @Override public void scheduleAt(final DateTime time, final SchedulerTask task) {
                 service.schedule( new TimerTask() {
                     @Override public void run() {
                         try {
@@ -45,7 +45,7 @@ public abstract class Scheduler {
                 }
             } );
 
-            @Override public void scheduleAt(Instant time, SchedulerTask t) {
+            @Override public void scheduleAt(DateTime time, SchedulerTask t) {
                 actor.act( new Timed<>( time, t ) );
             }
         };
@@ -122,7 +122,7 @@ public abstract class Scheduler {
         };
     }
 
-    public abstract void scheduleAt(Instant time, SchedulerTask t);
+    public abstract void scheduleAt(DateTime time, SchedulerTask t);
 
     static class Numbered<T> {
         public final long number;

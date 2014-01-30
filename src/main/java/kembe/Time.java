@@ -66,16 +66,16 @@ public class Time {
             };
     }
 
-    public static DateTime midnightBefore(ReadableInstant instant) {
-        return instant.toInstant().toDateTime().toDateMidnight().toDateTime();
+    public static DateTime midnightBefore(DateTime dateTime) {
+        return dateTime.toDateMidnight().toDateTime();
     }
 
     public static DateTime nextMidnightAfter(ReadableInstant instant) {
         return instant.toInstant().toDateTime().toDateMidnight().toDateTime().plusDays( 1 );
     }
 
-    public static DateTime next(LocalTime time, ReadableInstant instant) {
-        DateTime dt = instant.toInstant().toDateTime().withFields( time );
+    public static DateTime next(LocalTime time, DateTime instant) {
+        DateTime dt = instant.withFields( time );
 
         return dt.isAfter( instant )
                ? dt

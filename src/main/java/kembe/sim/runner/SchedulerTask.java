@@ -1,9 +1,9 @@
 package kembe.sim.runner;
 
-import org.joda.time.Instant;
+import org.joda.time.DateTime;
 
 public interface SchedulerTask {
 
-    public void run(Instant time);
+    public void run(DateTime time);
 
 }

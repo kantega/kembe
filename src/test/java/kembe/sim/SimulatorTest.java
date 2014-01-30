@@ -4,8 +4,8 @@ import fj.Show;
 import kembe.EventStreamHandler;
 import kembe.EventStreamSubscriber;
 import kembe.sim.rand.Rand;
+import org.joda.time.DateTime;
 import org.joda.time.Duration;
-import org.joda.time.Instant;
 import org.joda.time.Seconds;
 import org.junit.Test;
 
@@ -57,9 +57,9 @@ public class SimulatorTest {
     public void instant() throws InterruptedException {
 
         Random r = new Random( 2 );
-        Instant now = now();
+        DateTime now = now().toDateTime();
         final CountDownLatch l = new CountDownLatch( 1 );
-        final Show<Timed<SimEvent>> show = Timed.elapsedShow( now, SimEvent.plainShow );//Timed.show( SimEvent.plainShow );//
+        final Show<Timed<SimEvent>> show = Timed.elapsedShow( now.toInstant(), SimEvent.plainShow );//Timed.show( SimEvent.plainShow );//
         SimulationBuilder.build()
                 .addHandler( idFromString( "testDriver" ), testDriver )
                 .addHandler( idFromString( "testHandler" ), testHandler )
@@ -85,8 +85,8 @@ public class SimulatorTest {
     public void realtime() throws InterruptedException {
 
         Random r = new Random( 2 );
-        Instant now = now();
-        final Show<Timed<SimEvent>> show = Timed.elapsedShow( now, SimEvent.plainShow );
+        DateTime now = now().toDateTime();
+        final Show<Timed<SimEvent>> show = Timed.elapsedShow( now.toInstant(), SimEvent.plainShow );
         final CountDownLatch l = new CountDownLatch( 1 );
         SimulationBuilder.build()
                 .addHandler( idFromString( "testDriver" ), testDriver )
