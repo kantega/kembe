@@ -15,9 +15,9 @@ import java.util.concurrent.TimeUnit;
 
 import static kembe.Time.now;
 import static kembe.sim.AgentId.idFromString;
+import static kembe.sim.RandWait.waitAtMost;
 import static kembe.sim.RandWait.waitFor;
-import static kembe.sim.RandWait.waitForAtLeast;
-import static kembe.sim.Signal.*;
+import static kembe.sim.Signal.signal;
 
 public class SimulatorTest {
 
@@ -31,7 +31,7 @@ public class SimulatorTest {
 
                     else if (s.msg.startsWith( "OK" ))
                         return just( sleep(
-                                waitForAtLeast( Seconds.ONE ), Signal.newToSelf( "retry" ),
+                                waitAtMost( Seconds.ONE ), Signal.newToSelf( "retry" ),
                                 event( "Reply received" ) ) );
 
                     else
@@ -44,7 +44,7 @@ public class SimulatorTest {
             new SimAgent() {
                 @Override public Rand<Step> act(Signal signal, SimAgentContext ctx) {
                     if (signal.msg.startsWith( "GET" ))
-                        return just( sleep( waitForAtLeast( Duration.millis( 5 ) ), Signal.reply( signal, "doReply" ) ) );
+                        return just( sleep( waitAtMost( Duration.millis( 5 ) ), Signal.reply( signal, "doReply" ) ) );
 
                     if (signal.msg.equals( "doReply" ))
                         return just( send( signal.reply( "OK" ) ) );

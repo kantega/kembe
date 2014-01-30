@@ -79,7 +79,7 @@ public abstract class RandWait {
         };
     }
 
-    public static RandWait waitForAtMost(final ReadablePeriod p) {
+    public static RandWait waitAtMost(final ReadablePeriod p) {
         return waitAtMost( p.toPeriod().toStandardDuration() );
     }
 
