@@ -38,6 +38,7 @@ public class EventStreamFork<A>{
                             distribute( event );
                         }
                     } );
+                    openStream = Option.some( os );
                 }
                 return new OpenEventStream<A>() {
                     @Override public EventStream<A> close() {
