@@ -13,10 +13,34 @@ import kembe.util.Functions;
 import kembe.util.Shows;
 import kembe.util.Split;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 
 public abstract class EventStream<A> {
+
+
+    /**
+     * Creates an empty eventstream that calls done() on the subscriber at once.
+     * @param <A>
+     * @return
+     */
+    public static <A> EventStream<A> nil(){
+        return new EventStream<A>() {
+            @Override public OpenEventStream<A> open(EventStreamSubscriber<A> subscriber) {
+                subscriber.done();
+                return OpenEventStream.noOp( this );
+            }
+        };
+    }
+
+    public static <A> EventStream<A> one(A value){
+        return values(value);
+    }
+
+    public static <A> EventStream values(A ... values){
+        return fromIterable( Arrays.<A>asList( values ) );
+    }
 
     public static <A> EventStream<A> fromStream(final Stream<A> stream) {
         return new EventStream<A>() {
@@ -206,12 +230,19 @@ public abstract class EventStream<A> {
         }) );
     }
 
-    public <B> EventStream<B> mapStateful(final Mealy<A, B> f) {
-        return EventStream.mapStateful( this, f );
+    public <B> EventStream<B> mapStateful(final Mealy<A, B> stateMachine) {
+        return EventStream.mapStateful( this, stateMachine);
     }
 
+    public <B> EventStream<B> mapStatefulO(final Mealy<A,Option<B>> stateMachine){
+        return bindStateful( this,stateMachine.map(new F<Option<B>, EventStream<B>>() {
+            @Override public EventStream<B> f(Option<B> bs) {
+                return EventStream.fromIterable( bs );
+            }
+        }) );
+    }
 
-    public <B> EventStream<B> rawMap(final F<StreamEvent<A>, StreamEvent<B>> f) {
+    public <B> EventStream<B> mapEvent(final F<StreamEvent<A>, StreamEvent<B>> f) {
         return new RawMappedEventStream<>( this, f );
     }
 
@@ -219,15 +250,15 @@ public abstract class EventStream<A> {
         return flatten( this.map( f ) );
     }
 
-    public <B> EventStream<B> rawBind(F<StreamEvent<A>,EventStream<B>> f){
+    public <B> EventStream<B> bindEvent(F<StreamEvent<A>,EventStream<B>> f){
         return new RawBoundEventStream(this,f);
     }
 
-    public <B> EventStream<B> bindStateful(final Mealy<A, EventStream<B>> f) {
-        return bindStateful( this, f );
+    public <B> EventStream<B> bindStateful(final Mealy<A, EventStream<B>> stateMachine) {
+        return bindStateful( this, stateMachine );
     }
 
-    public  EventStream<A> injectStateful(final Mealy<StreamEvent<A>, Iterable<StreamEvent<A>>> f) {
+    public <B> EventStream<B> bindEventStateful(final Mealy<StreamEvent<A>,EventStream<B>> f){
         return new FlattenRawIterableStatefulEventStream<>( this, f );
     }
 
