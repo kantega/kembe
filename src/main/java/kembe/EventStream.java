@@ -34,6 +34,16 @@ public abstract class EventStream<A> {
         };
     }
 
+    public static <A> EventStream<A> error(final Exception e){
+        return new EventStream<A>() {
+            @Override public OpenEventStream<A> open(EventStreamSubscriber<A> subscriber) {
+                subscriber.error( e );
+                subscriber.done();
+                return OpenEventStream.noOp( this );
+            }
+        };
+    }
+
     public static <A> EventStream<A> one(A value){
         return values(value);
     }
