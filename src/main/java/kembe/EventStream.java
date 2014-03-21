@@ -280,8 +280,18 @@ public abstract class EventStream<A> {
         return EventStream.merge( this, other );
     }
 
+    /**
+     * Opens first the argument eventstream, then this eventstream. Results from the other are buffered, and
+     * forwarded when this eventstream is done
+     * @param eventual
+     * @return
+     */
     public EventStream<A> andThen(EventStream<A> eventual) {
-        return new AndThenEventStream<>( this, eventual );
+        return new ParallellBufferedEventStream<>( this, eventual );
+    }
+
+    public EventStream<A> append(EventStream<A> other){
+        return new AppendEventStream<A>(this,other);
     }
 
     public EventStream<A> tap(EventStreamSubscriber<A> effect){

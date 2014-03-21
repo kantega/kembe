@@ -15,13 +15,13 @@ import kembe.util.Actors;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class AndThenEventStream<A> extends EventStream<A> {
+public class ParallellBufferedEventStream<A> extends EventStream<A> {
 
     private final EventStream<A> first;
 
     private final EventStream<A> eventual;
 
-    public AndThenEventStream(EventStream<A> first, EventStream<A> eventual) {
+    public ParallellBufferedEventStream(EventStream<A> first, EventStream<A> eventual) {
         this.first = first;
         this.eventual = eventual;
     }
