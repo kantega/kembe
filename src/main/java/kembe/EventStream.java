@@ -287,7 +287,7 @@ public abstract class EventStream<A> {
      * @return
      */
     public EventStream<A> andThen(EventStream<A> eventual) {
-        return new ParallellBufferedEventStream<>( this, eventual );
+        return new ParallellBufferedAndThenEventStream<>( this, eventual );
     }
 
     public EventStream<A> append(EventStream<A> other){

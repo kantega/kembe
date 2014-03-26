@@ -15,13 +15,13 @@ import kembe.util.Actors;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ParallellBufferedEventStream<A> extends EventStream<A> {
+public class ParallellBufferedAndThenEventStream<A> extends EventStream<A> {
 
     private final EventStream<A> first;
 
     private final EventStream<A> eventual;
 
-    public ParallellBufferedEventStream(EventStream<A> first, EventStream<A> eventual) {
+    public ParallellBufferedAndThenEventStream(EventStream<A> first, EventStream<A> eventual) {
         this.first = first;
         this.eventual = eventual;
     }
@@ -32,32 +32,29 @@ public class ParallellBufferedEventStream<A> extends EventStream<A> {
         final Effect<Either<StreamEvent<A>, StreamEvent<A>>> bufferingEffect =
                 new Effect<Either<StreamEvent<A>, StreamEvent<A>>>() {
 
-                    final ArrayList<A> buffer =
+                    final ArrayList<StreamEvent<A>> buffer =
                             new ArrayList<>();
 
                     final AtomicBoolean flushed =
                             new AtomicBoolean( false );
 
                     final EventStreamSubscriber<A> eventualHandler =
-                            effect.onNext(
-                                    new Effect<A>() {
-                                        @Override
-                                        public void e(A next) {
-                                            if (flushed.get())
-                                                effect.e( new StreamEvent.Next<>( next ) );
-                                            else
-                                                buffer.add( next );
-                                        }
-                                    }
-                            );
+                            EventStreamSubscriber.create( new Effect<StreamEvent<A>>() {
+                                @Override public void e(StreamEvent<A> event) {
+                                    if (flushed.get())
+                                        effect.e( event );
+                                    else
+                                        buffer.add( event );
+                                }
+                            } );
 
                     final EventStreamSubscriber<A> firstHandler =
                             effect.onDone(
                                     new Effect<Unit>() {
                                         public void e(Unit u) {
 
-                                            for (A a : buffer) {
-                                                effect.e( new StreamEvent.Next<>( a ) );
+                                            for (StreamEvent<A> a : buffer) {
+                                                effect.e( a );
                                             }
                                             flushed.set( true );
                                             buffer.clear();
