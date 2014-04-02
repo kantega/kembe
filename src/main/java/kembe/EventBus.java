@@ -1,14 +1,27 @@
 package kembe;
 
 import fj.Effect;
+import fj.control.parallel.Actor;
+import fj.control.parallel.Strategy;
 
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
 
-public class EventStreamConnector<A> {
+public class EventBus<A> {
 
     private final CopyOnWriteArrayList<EventStreamSubscriber<A>> observers = new CopyOnWriteArrayList<>();
 
+    private final Actor<StreamEvent<A>> actor;
 
+    public EventBus() {
+        actor = Actor.queueActor( Strategy.executorStrategy( Executors.newSingleThreadExecutor()), new Effect<StreamEvent<A>>() {
+            @Override public void e(StreamEvent<A> a) {
+                for (EventStreamSubscriber<A> observer : observers) {
+                    observer.e( a );
+                }
+            }
+        } );
+    }
 
     public EventStream<A> stream(){
         return new EventStream<A>() {
@@ -50,8 +63,6 @@ public class EventStreamConnector<A> {
     }
 
     private void submit(StreamEvent<A> event) {
-        for (EventStreamSubscriber<A> observer : observers) {
-            observer.e( event );
-        }
+        actor.act( event );
     }
 }
