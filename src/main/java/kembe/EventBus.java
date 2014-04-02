@@ -1,6 +1,7 @@
 package kembe;
 
 import fj.Effect;
+import fj.Unit;
 import fj.control.parallel.Actor;
 import fj.control.parallel.Strategy;
 
@@ -14,7 +15,7 @@ public class EventBus<A> {
     private final Actor<StreamEvent<A>> actor;
 
     public EventBus() {
-        actor = Actor.queueActor( Strategy.executorStrategy( Executors.newSingleThreadExecutor()), new Effect<StreamEvent<A>>() {
+        actor = Actor.queueActor( Strategy.<Unit>executorStrategy( Executors.newSingleThreadExecutor()), new Effect<StreamEvent<A>>() {
             @Override public void e(StreamEvent<A> a) {
                 for (EventStreamSubscriber<A> observer : observers) {
                     observer.e( a );
