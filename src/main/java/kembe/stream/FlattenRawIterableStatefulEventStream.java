@@ -14,6 +14,36 @@ public class FlattenRawIterableStatefulEventStream<A, B> extends EventStream<B> 
     }
 
     @Override public OpenEventStream<B> open(final EventStreamSubscriber<B> effect) {
+        final EventStreamSubscriber<B> forwarder = EventStreamSubscriber.create( new EventStreamHandler<B>() {
+            @Override public void next(B b) {
+                effect.next( b );
+            }
+
+            @Override public void error(Exception e) {
+                effect.error( e );
+            }
+
+            @Override public void done() {
+                //Althoug this stream is done, the original stream might have more events.
+                //We only send done if the source sends done.
+            }
+        } );
+
+        final EventStreamHandler donePropagation = new EventStreamHandler() {
+            @Override public void next(Object o) {
+                //Noop, handled above
+            }
+
+            @Override public void error(Exception e) {
+                //Propagate errors
+                effect.error( e );
+            }
+
+            @Override public void done() {
+                effect.done();
+            }
+        };
+
         OpenEventStream<A> open =
                 source.open( new EventStreamSubscriber<A>() {
                     volatile Mealy<StreamEvent<A>, EventStream<B>> state = initialMealy;
@@ -21,36 +51,9 @@ public class FlattenRawIterableStatefulEventStream<A, B> extends EventStream<B> 
                     @Override public void e(StreamEvent<A> event) {
                         Mealy.Transition<StreamEvent<A>, EventStream<B>> t = state.apply( event );
                         state = t.nextMealy;
-                        t.result.open( EventStreamSubscriber.create( new EventStreamHandler<B>() {
-                            @Override public void next(B b) {
-                                effect.next( b );
-                            }
-
-                            @Override public void error(Exception e) {
-                                effect.error( e );
-                            }
-
-                            @Override public void done() {
-                                //Althoug this stream is done, the original stream might have more events.
-                                //We only send done if the source sends done.
-                            }
-                        } ) );
+                        t.result.open( forwarder);
                         //Handle errors and propagate done
-                        event.effect( new EventStreamHandler() {
-                            @Override public void next(Object o) {
-                                //Noop, handled above
-                            }
-
-                            @Override public void error(Exception e) {
-                                //Propagate errors
-                                effect.error( e );
-                            }
-
-                            @Override public void done() {
-                                effect.done();
-                            }
-                        } );
-
+                        event.effect(donePropagation );
                     }
                 } );
 
