@@ -63,10 +63,10 @@ public class SimulatorTest {
         SimulationBuilder.build()
                 .addHandler( idFromString( "testDriver" ), testDriver )
                 .addHandler( idFromString( "testHandler" ), testHandler )
-                .instant( now, now.plus( Seconds.seconds( 30 ).toStandardDuration() ), r, "start" )
+                .instant( now, now.plus( Duration.standardDays( 10 ) ), r, "start" )
                 .open( EventStreamSubscriber.create( new EventStreamHandler<Timed<SimEvent>>() {
                     @Override public void next(Timed<SimEvent> message) {
-                        show.printlnE( message );
+                        //show.println( message );
                     }
 
                     @Override public void error(Exception e) {
@@ -78,7 +78,7 @@ public class SimulatorTest {
                         l.countDown();
                     }
                 } ) );
-        l.await( 5, TimeUnit.SECONDS );
+        l.await( 60, TimeUnit.SECONDS );
     }
 
     //@Test

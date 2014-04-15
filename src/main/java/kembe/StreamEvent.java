@@ -157,7 +157,7 @@ public abstract class StreamEvent<A> {
             try{
             onNext.e( this );
             }catch (Throwable t){
-                onError.e( StreamEvent.<A>error( new Exception( "Exception throws while calling onNext",t ) ) );
+                onError.e( StreamEvent.<A>error( new Exception( "Exception thrown while calling onNext: "+t.getMessage(),t ) ) );
             }
         }
 
