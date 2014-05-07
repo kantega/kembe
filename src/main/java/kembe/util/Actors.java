@@ -68,21 +68,27 @@ public class Actors {
             AtomicBoolean suspended = new AtomicBoolean( true );
 
             // Queue to hold pending messages
-            ConcurrentLinkedQueue<T> mbox = new ConcurrentLinkedQueue<T>();
+            ConcurrentLinkedQueue<T> mbox = new ConcurrentLinkedQueue<>();
 
             // Product so the actor can use its strategy (to act on messages in other threads,
             // to handle exceptions, etc.)
             P1<Unit> processor = new P1<Unit>() {
                 @Override public Unit _1() {
                     // get next item from queue
-                    while (!mbox.isEmpty()) {
-                        T a = mbox.poll();
-                        ea.e( a );
+                    try {
+                        while (!mbox.isEmpty()) {
+                            T a = mbox.poll();
+                            ea.e( a );
+                        }
+                        // clear the lock
+
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                    } finally {
+                        suspended.set( true );
+                        // work again, in case someone else queued up a message while we were holding the lock
+                        work();
                     }
-                    // clear the lock
-                    suspended.set( true );
-                    // work again, in case someone else queued up a message while we were holding the lock
-                    work();
                     return Unit.unit();
                 }
             };
