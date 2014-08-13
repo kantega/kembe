@@ -80,11 +80,12 @@ public class Actors {
                             T a = mbox.poll();
                             ea.e( a );
                         }
-                        // clear the lock
+
 
                     } catch (Throwable t) {
                         t.printStackTrace();
                     } finally {
+                        // clear the lock
                         suspended.set( true );
                         // work again, in case someone else queued up a message while we were holding the lock
                         work();
