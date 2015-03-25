@@ -27,6 +27,14 @@ public class Time {
         }
     };
 
+    public static F<Integer,Duration> intsToDuration = new F<Integer, Duration>() {
+        @Override public Duration f(Integer integer) {
+            return new Duration( new Long(integer) );
+        }
+    };
+
+
+
     public static Instant quantumIncrement(Instant instant) {
         return instant.plus( 1 );
     }

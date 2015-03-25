@@ -7,6 +7,7 @@ import fj.test.Arg;
 import fj.test.CheckResult;
 import fj.test.Property;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.junit.Assert;
 
 import static fj.test.CheckResult.summary;
@@ -23,7 +24,7 @@ public class CheckResults {
                     return s;
                 }
 
-                String s = "Arg(" + ToStringBuilder.reflectionToString( arg.value() ) + ")";
+                String s = "Arg(" + reflectionShow().showS( arg.value() ) + ")";
                 return s;
             }
         } );
@@ -33,7 +34,14 @@ public class CheckResults {
         return Show.showS( new F<T, String>() {
             @Override
             public String f(T t) {
-                return ToStringBuilder.reflectionToString( t );
+                if (t instanceof List)
+                    return "List("+Show.listShow( reflectionShow() ).showS((List) t )+")";
+                else if(t instanceof P1)
+                    return Show.p1Show( reflectionShow() ).showS( (P1)t );
+                else if(t instanceof P2)
+                    return Show.p2Show( reflectionShow(), reflectionShow() ).showS( (P2)t );
+                else
+                    return ToStringBuilder.reflectionToString( t, ToStringStyle.SHORT_PREFIX_STYLE );
             }
         } );
     }
@@ -52,7 +60,7 @@ public class CheckResults {
         results.foreach( new Effect<P2<String, CheckResult>>() {
             public void e(final P2<String, CheckResult> result) {
                 out.print( " * " + result._1() + ": " );
-                summary(argReflectionShow()).println( result._2() );
+                summary( argReflectionShow() ).println( result._2() );
             }
         } );
         out.println( "--------------------------------------------------------------------------------" );
@@ -67,7 +75,7 @@ public class CheckResults {
             public Boolean f(final P2<String, CheckResult> result) {
                 result._2().exception().foreach( new Effect<Throwable>() {
                     public void e(Throwable throwable) {
-                        throw new AssertionError( summary( argReflectionShow() ).showS( result._2() )+": "+ throwable.getMessage() );
+                        throw new AssertionError( summary( argReflectionShow() ).showS( result._2() ) + ": " + throwable.getMessage() );
                     }
                 } );
 

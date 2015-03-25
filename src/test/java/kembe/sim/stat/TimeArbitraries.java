@@ -18,20 +18,30 @@ public class TimeArbitraries {
                 }
             }.curry() ) );
 
-    public static final Arbitrary<Probability> arbProbability = Arbitrary.arbitrary( Gen.choose( 0,1000000 ).map( new F<Integer, Probability>() {
+    public static final Arbitrary<Probability> arbProbability = Arbitrary.arbitrary( Gen.choose( 0, 1000000 ).map( new F<Integer, Probability>() {
         @Override public Probability f(Integer d) {
-            return new Probability( new DoubleFromZeroIncToOne( ((double)d)/1000000 ) );
+            return new Probability( new DoubleFromZeroIncToOne( ((double) d) / 1000000 ) );
         }
     } ) );
 
 
     public static Arbitrary<Duration> arbDuration(final Duration min, final Duration max) {
-        Gen<Integer> durInSeconds = Gen.choose( (int) min.getStandardSeconds(), (int) max.getStandardSeconds() );
-        return Arbitrary.arbitrary( durInSeconds.map( new F<Integer, Duration>() {
-            @Override public Duration f(Integer integer) {
-                return new Duration( integer * 1000L );
-            }
-        } ) );
+        if (max.getMillis() < Integer.MAX_VALUE-1) {
+            Gen<Integer> durInMillis = Gen.choose( (int) min.getMillis(), (int) max.getMillis() );
+            return Arbitrary.arbitrary( durInMillis.map( new F<Integer, Duration>() {
+                @Override public Duration f(Integer integer) {
+                    return new Duration( integer );
+                }
+            } ) );
+        }
+        else {
+            Gen<Integer> durInSeconds = Gen.choose( (int) min.getStandardSeconds(), (int) max.getStandardSeconds() );
+            return Arbitrary.arbitrary( durInSeconds.map( new F<Integer, Duration>() {
+                @Override public Duration f(Integer integer) {
+                    return new Duration( integer * 1000L );
+                }
+            } ) );
+        }
     }
 
     public static final Arbitrary<Instant> arbInstant(Interval interval) {
