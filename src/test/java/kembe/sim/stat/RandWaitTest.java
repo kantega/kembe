@@ -57,7 +57,7 @@ public class RandWaitTest {
         }
     } );
 
-    @Test
+    //@Test
     public void checkProperties() {
         CheckResults.assertAndPrintResults( Check.check( RandWaitTest.class ) );
     }
