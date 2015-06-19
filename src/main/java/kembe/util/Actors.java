@@ -57,7 +57,7 @@ public class Actors {
         } );
     }
 
-    /**
+    /*
      * An Actor equipped with a queue and which is guaranteed to process one message at a time.
      * With respect to an enqueueing actor or thread, this actor will process messages in the same order
      * as they are sent.

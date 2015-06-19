@@ -11,7 +11,7 @@ public abstract class Rand<A> {
     /**
      * Random int in the range[Integer.MIN_VALUE,Integer.MAX_VALUE]
      *
-     * @return
+     * @return A random generator for any integer
      */
     public static Rand<AnyInteger> randomInt() {
         return new Rand<AnyInteger>() {
@@ -24,7 +24,7 @@ public abstract class Rand<A> {
     /**
      * Random long in the range[Long.MIN_VALUE,Long.MAX_VALUE]
      *
-     * @return
+     * @return a random generator for long values
      */
     public static Rand<AnyLong> randomLong() {
         return new Rand<AnyLong>() {
@@ -37,7 +37,7 @@ public abstract class Rand<A> {
     /**
      * Random double in the range [0,1]
      *
-     * @return
+     * @return a generator of doubles between 0 and 1
      */
     public static Rand<DoubleFromZeroIncToOne> randomDouble() {
         return new Rand<DoubleFromZeroIncToOne>() {
@@ -50,7 +50,7 @@ public abstract class Rand<A> {
     /**
      * Random double in the range <-infinity,infinity&gt;, gauss distributed with k=0 and std dev = 1
      *
-     * @return
+     * @return a random generator
      */
     public static Rand<AnyDouble> randomGaussDouble() {
         return new Rand<AnyDouble>() {
@@ -63,9 +63,9 @@ public abstract class Rand<A> {
     /**
      * Randomly selects one of the arguments with equal probability
      *
-     * @param ts
-     * @param <T>
-     * @return
+     * @param ts the posibilities
+     * @param <T> the type of values
+     * @return a generator
      */
     public static <T> Rand<T> oneOf(final T... ts) {
         return oneOf( List.list( ts ) );
@@ -74,22 +74,20 @@ public abstract class Rand<A> {
     /**
      * Randomly selects one of the elements in the list with equal probability
      *
-     * @param ts
-     * @param <T>
-     * @return
+     * @param ts the posibilities
+     * @param <T> the type of values
+     * @return a generator
      */
     public static <T> Rand<T> oneOf(final List<T> ts) {
         final ArrayList<T> copy = new ArrayList(ts.toCollection());
 
-        return randomInt( 0, ts.length() ).map( new F<Integer, T>() {
-            @Override public T f(Integer integer) {
-                try {
-                    T t = copy.get( integer );
-                    return t;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw new Error("COuld not make random T");
-                }
+        return randomInt( 0, ts.length() ).map( integer -> {
+            try {
+                T t = copy.get( integer );
+                return t;
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new Error("COuld not make random T");
             }
         } );
     }
@@ -97,9 +95,9 @@ public abstract class Rand<A> {
     /**
      * Random int in the range [min,max>
      *
-     * @param from
-     * @param to
-     * @return
+     * @param from minvalue
+     * @param to maxvalue
+     * @return a generator
      */
     public static Rand<Integer> randomInt(final int from, final int to) {
 

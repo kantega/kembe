@@ -22,8 +22,8 @@ public abstract class EventStream<A> {
     /**
      * Creates an empty eventstream that calls done() on the subscriber at once.
      *
-     * @param <A>
-     * @return
+     * @param <A> The type that the stream produces
+     * @return A stream with no entries
      */
     public static <A> EventStream<A> nil() {
         return new EventStream<A>() {
@@ -248,8 +248,8 @@ public abstract class EventStream<A> {
      * Opens first the argument eventstream, then this eventstream. Results from the other are buffered, and
      * forwarded when this eventstream is done
      *
-     * @param eventual
-     * @return
+     * @param eventual The stream that is buffered until this stream closes
+     * @return A new stream
      */
     public EventStream<A> andThen(EventStream<A> eventual) {
         return new ParallellBufferedAndThenEventStream<>( this, eventual );
