@@ -48,7 +48,7 @@ public abstract class Rand<A> {
     }
 
     /**
-     * Random double in the range <-infinity,infinity&gt;, gauss distributed with k=0 and std dev = 1
+     * Random double in the range (-infinity,infinity&gt;, gauss distributed with k=0 and std dev = 1
      *
      * @return a random generator
      */
@@ -93,7 +93,7 @@ public abstract class Rand<A> {
     }
 
     /**
-     * Random int in the range [min,max>
+     * Random int in the range [min,max)
      *
      * @param from minvalue
      * @param to maxvalue
