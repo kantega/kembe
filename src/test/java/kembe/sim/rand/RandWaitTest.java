@@ -32,47 +32,39 @@ public class RandWaitTest {
     @CheckParams(minSize = 1,minSuccessful = 200)
     Property p1 = Property.property(
             arbitrary( Gen.listOf( Gen.choose( 200, 500000 ).map( Time.intsToDuration )) ),
-            new F<List<Duration>, Property>() {
-                @Override public Property f(final List<Duration> list) {
+            list -> Property.implies( list.length()>4,new P1<Property>() {
+                @Override public Property _1() {
+                    V2<Integer> count =
+                            list.foldLeft( (integers, max) -> {
+                                Duration min = new Duration( 10 );
+                                DateTime origin = new DateTime( 1 );
+                                DateTime time =
+                                        RandWait
+                                                .waitForBetween( min, max )
+                                                .after( origin )
+                                                .next( random );
 
-                    return Property.implies( list.length()>4,new P1<Property>() {
-                        @Override public Property _1() {
-                            V2<Integer> count =
-                                    list.foldLeft( new F2<V2<Integer>, Duration, V2<Integer>>() {
-                                        @Override public V2<Integer> f(V2<Integer> integers, Duration max) {
-                                            Duration min = new Duration( 10 );
-                                            DateTime origin = new DateTime( 1 );
-                                            DateTime time =
-                                                    RandWait
-                                                            .waitForBetween( min, max )
-                                                            .after( origin )
-                                                            .next( random );
+                                Duration half = new Duration( (max.minus( min )).getMillis() / 2 );
+                                DateTime lowerBound = origin.plus( min );
+                                DateTime upperBound = origin.plus( max );
+                                DateTime middle = lowerBound.plus( half );
+                                Interval lower = new Interval( lowerBound, middle );
+                                Interval higher = new Interval( middle, upperBound );
 
-                                            Duration half = new Duration( (max.minus( min )).getMillis() / 2 );
-                                            DateTime lowerBound = origin.plus( min );
-                                            DateTime upperBound = origin.plus( max );
-                                            DateTime middle = lowerBound.plus( half );
-                                            Interval lower = new Interval( lowerBound, middle );
-                                            Interval higher = new Interval( middle, upperBound );
+                                if (lower.contains( time ))
+                                    return V.v( integers._1() + 1, integers._2() );
+                                else if (higher.contains( time ))
+                                    return V.v( integers._1(), integers._2() + 1 );
+                                else
+                                    return integers;
+                            }, V.v( 0, 0 ) );
 
-                                            if (lower.contains( time ))
-                                                return V.v( integers._1() + 1, integers._2() );
-                                            else if (higher.contains( time ))
-                                                return V.v( integers._1(), integers._2() + 1 );
-                                            else
-                                                return integers;
-                                        }
-                                    }, V.v( 0, 0 ) );
-
-                            return Property.prop( count._1() > 0 && count._2() > 0 );
-                        }
-                    } );
-
+                    return Property.prop( count._1() > 0 && count._2() > 0 );
                 }
-            } );
+            } ) );
 
 
-    @Test
+    //@Test
     public void testRandWait() {
         CheckResults.assertAndPrintResults(
                 Check.check( RandWaitTest.class ) );

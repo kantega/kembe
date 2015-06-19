@@ -1,6 +1,5 @@
 package kembe.sim.stat;
 
-import fj.F;
 import fj.test.Arbitrary;
 import fj.test.Gen;
 import fj.test.Property;
@@ -11,7 +10,6 @@ import kembe.sim.RandWait;
 import kembe.sim.rand.Rand;
 import org.joda.time.DateTime;
 import org.joda.time.LocalTime;
-import org.junit.Test;
 
 import java.util.Random;
 
