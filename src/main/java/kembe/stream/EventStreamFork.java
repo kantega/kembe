@@ -2,6 +2,7 @@ package kembe.stream;
 
 import fj.Effect;
 import fj.data.Option;
+import fj.function.Effect1;
 import kembe.EventStream;
 import kembe.EventStreamSubscriber;
 import kembe.OpenEventStream;
@@ -43,11 +44,7 @@ public class EventStreamFork<A>{
                 return new OpenEventStream<A>() {
                     @Override public EventStream<A> close() {
                         if(opened.decrementAndGet()==0){
-                            openStream.foreach( new Effect<OpenEventStream<A>>() {
-                                @Override public void e(OpenEventStream<A> aOpenEventStream) {
-                                    aOpenEventStream.close();
-                                }
-                            } );
+                            openStream.foreachDoEffect( OpenEventStream::close );
                         }
                         return buildStream();
                     }

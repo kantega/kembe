@@ -141,7 +141,7 @@ public class Signal {
                 ')';
     }
 
-    public static class SignalBuilder extends F<SimAgentContext, Signal> {
+    public static class SignalBuilder implements F<SimAgentContext, Signal> {
 
         private final String name;
 

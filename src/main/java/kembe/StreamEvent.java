@@ -1,60 +1,42 @@
 package kembe;
 
-import fj.Effect;
 import fj.F;
-import fj.P1;
 import fj.Show;
 import fj.data.Either;
 import fj.data.NonEmptyList;
 import fj.data.Validation;
+import fj.function.Effect1;
+
+import java.util.function.Supplier;
 
 public abstract class StreamEvent<A> {
 
     public static <A, B> F<Either<StreamEvent<A>, StreamEvent<B>>, StreamEvent<Either<A, B>>> normEither() {
-        return new F<Either<StreamEvent<A>, StreamEvent<B>>, StreamEvent<Either<A, B>>>() {
-            @Override public StreamEvent<Either<A, B>> f(Either<StreamEvent<A>, StreamEvent<B>> either) {
-                if (either.isLeft())
-                    return either.left().value().map( Either.<A, B>left_() );
-                else
-                    return either.right().value().map( Either.<A, B>right_() );
-            }
+        return either -> {
+            if (either.isLeft())
+                return either.left().value().map( Either.<A, B>left_() );
+            else
+                return either.right().value().map( Either.<A, B>right_() );
         };
     }
 
     public static <A, B> F<StreamEvent<A>, StreamEvent<B>> lift(final F<A, B> f) {
-        return new F<StreamEvent<A>, StreamEvent<B>>() {
-            @Override
-            public StreamEvent<B> f(StreamEvent<A> aStreamEvent) {
-                return aStreamEvent.map( f );
-            }
-        };
+        return aStreamEvent -> aStreamEvent.map( f );
     }
 
     public static <A, E, B> F<StreamEvent<A>, StreamEvent<B>> liftV(final F<A, Validation<NonEmptyList<E>, B>> f, final Show<E> msgConverter) {
-        return new F<StreamEvent<A>, StreamEvent<B>>() {
-            @Override public StreamEvent<B> f(StreamEvent<A> aStreamEvent) {
-                return aStreamEvent
-                        .fold(
-                                new F<A, StreamEvent<B>>() {
-                                    @Override public StreamEvent<B> f(A a) {
-                                        Validation<NonEmptyList<E>, B> v = f.f( a );
-                                        if (v.isSuccess())
-                                            return StreamEvent.next( v.success() );
-                                        else
-                                            return StreamEvent.error( new Exception( Show.nonEmptyListShow( msgConverter ).showS( v.fail() ) ) );
-                                    }
-                                }, new F<Exception, StreamEvent<B>>() {
-                                    @Override public StreamEvent<B> f(Exception e) {
-                                        return StreamEvent.error( e );
-                                    }
-                                }, new P1<StreamEvent<B>>() {
-                                    @Override public StreamEvent<B> _1() {
-                                        return StreamEvent.done();
-                                    }
-                                }
-                        );
-            }
-        };
+        return aStreamEvent -> aStreamEvent
+                .fold(
+                        a -> {
+                            Validation<NonEmptyList<E>, B> v = f.f( a );
+                            if (v.isSuccess())
+                                return StreamEvent.next( v.success() );
+                            else
+                                return StreamEvent.error( new Exception( Show.nonEmptyListShow( msgConverter ).showS( v.fail() ) ) );
+                        },
+                        StreamEvent::error,
+                        (Supplier<StreamEvent<B>>) StreamEvent::done
+                );
     }
 
     public static <A> Next<A> next(A value) {
@@ -62,11 +44,7 @@ public abstract class StreamEvent<A> {
     }
 
     public static <A> F<A, Next<A>> next() {
-        return new F<A, Next<A>>() {
-            @Override public Next<A> f(A a) {
-                return next( a );
-            }
-        };
+        return StreamEvent::next;
     }
 
     public static <A> Error<A> error(Exception e) {
@@ -82,38 +60,25 @@ public abstract class StreamEvent<A> {
     }
 
     public void effect(final EventStreamHandler handler) {
-        effect( new Effect<Next<A>>() {
-                    @Override public void e(Next<A> aNext) {
-                        handler.next( aNext.value );
-                    }
-                }, new Effect<Error<A>>() {
-                    @Override public void e(Error<A> aError) {
-                        handler.error( aError.e );
-                    }
-                }, new Effect<Done<A>>() {
-                    @Override public void e(Done<A> aDone) {
-                        handler.done();
-                    }
-                }
-        );
+        effect( aNext -> handler.next( aNext.value ), aError -> handler.error( aError.e ), aDone -> handler.done() );
     }
 
-    public abstract void effect(Effect<Next<A>> onNext, Effect<Error<A>> onError, Effect<Done<A>> onDone);
+    public abstract void effect(Effect1<Next<A>> onNext, Effect1<Error<A>> onError, Effect1<Done<A>> onDone);
 
-    public abstract <T> T fold(F<A, T> onNext, F<Exception, T> onError, P1<T> onDone);
+    public abstract <T> T fold(F<A, T> onNext, F<Exception, T> onError, Supplier<T> onDone);
 
     public abstract <B> StreamEvent<B> map(F<A, B> f);
 
     public static class Done<A> extends StreamEvent<A> {
 
 
-        @Override public void effect(Effect<Next<A>> onNext, Effect<Error<A>> onError, Effect<Done<A>> onDone) {
-            onDone.e( this );
+        @Override public void effect(Effect1<Next<A>> onNext, Effect1<Error<A>> onError, Effect1<Done<A>> onDone) {
+            onDone.f( this );
         }
 
         @Override
-        public <T> T fold(F<A, T> onNext, F<Exception, T> onError, P1<T> onDone) {
-            return onDone._1();
+        public <T> T fold(F<A, T> onNext, F<Exception, T> onError, Supplier<T> onDone) {
+            return onDone.get();
         }
 
         @Override
@@ -129,12 +94,12 @@ public abstract class StreamEvent<A> {
             this.e = e;
         }
 
-        @Override public void effect(Effect<Next<A>> onNext, Effect<Error<A>> onError, Effect<Done<A>> onDone) {
-            onError.e( this );
+        @Override public void effect(Effect1<Next<A>> onNext, Effect1<Error<A>> onError, Effect1<Done<A>> onDone) {
+            onError.f( this );
         }
 
         @Override
-        public <T> T fold(F<A, T> onNext, F<Exception, T> onError, P1<T> onDone) {
+        public <T> T fold(F<A, T> onNext, F<Exception, T> onError, Supplier<T> onDone) {
             return onError.f( e );
         }
 
@@ -153,25 +118,25 @@ public abstract class StreamEvent<A> {
             this.value = value;
         }
 
-        @Override public void effect(Effect<Next<A>> onNext, Effect<Error<A>> onError, Effect<Done<A>> onDone) {
-            try{
-            onNext.e( this );
-            }catch (Throwable t){
-                onError.e( StreamEvent.<A>error( new Exception( "Exception thrown while calling onNext: "+t.getMessage(),t ) ) );
+        @Override public void effect(Effect1<Next<A>> onNext, Effect1<Error<A>> onError, Effect1<Done<A>> onDone) {
+            try {
+                onNext.f( this );
+            } catch (Throwable t) {
+                onError.f( StreamEvent.<A>error( new Exception( "Exception thrown while calling onNext: " + t.getMessage(), t ) ) );
             }
         }
 
         @Override
-        public <T> T fold(F<A, T> onNext, F<Exception, T> onError, P1<T> onDone) {
+        public <T> T fold(F<A, T> onNext, F<Exception, T> onError, Supplier<T> onDone) {
             return onNext.f( value );
         }
 
         @Override
         public <B> StreamEvent<B> map(F<A, B> f) {
-            try{
-                B nextValue = f.f(value);
+            try {
+                B nextValue = f.f( value );
                 return new Next<>( nextValue );
-            }catch (Exception e){
+            } catch (Exception e) {
                 return StreamEvent.error( e );
             }
 

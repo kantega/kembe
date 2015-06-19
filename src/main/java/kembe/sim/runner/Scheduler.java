@@ -3,6 +3,7 @@ package kembe.sim.runner;
 import fj.*;
 import fj.control.parallel.Actor;
 import fj.control.parallel.Strategy;
+import fj.function.Effect1;
 import kembe.sim.Timed;
 import kembe.util.Order;
 import org.joda.time.DateTime;
@@ -39,11 +40,7 @@ public abstract class Scheduler {
     public static Scheduler instantScheduler() {
         return new Scheduler() {
 
-            Actor<Timed<SchedulerTask>> actor = orderedActor( Strategy.<Unit>executorStrategy( Executors.newSingleThreadExecutor() ), Timed.<SchedulerTask>timedOrd(), new Effect<Timed<SchedulerTask>>() {
-                @Override public void e(Timed<SchedulerTask> task) {
-                    task.value.run( task.time );
-                }
-            } );
+            Actor<Timed<SchedulerTask>> actor = orderedActor( Strategy.<Unit>executorStrategy( Executors.newSingleThreadExecutor() ), Timed.<SchedulerTask>timedOrd(), (Effect1<Timed<SchedulerTask>>) task -> task.value.run( task.time ) );
 
             @Override public void scheduleAt(DateTime time, SchedulerTask t) {
                 actor.act( new Timed<>( time, t ) );
@@ -51,8 +48,8 @@ public abstract class Scheduler {
         };
     }
 
-    private static <T> Actor<T> orderedActor(final Strategy<Unit> s, final Ord<T> ord, final Effect<T> ea) {
-        return Actor.actor( Strategy.<Unit>seqStrategy(), new Effect<T>() {
+    private static <T> Actor<T> orderedActor(final Strategy<Unit> s, final Ord<T> ord, final Effect1<T> ea) {
+        return Actor.actor( Strategy.<Unit>seqStrategy(), new Effect1<T>() {
 
             // Lock to ensure the actor only acts on one message at a time
             AtomicBoolean suspended = new AtomicBoolean( true );
@@ -70,7 +67,7 @@ public abstract class Scheduler {
                         Numbered<T> a = mbox.pollFirst();
                         // if there is one, process it
                         if (a != null) {
-                            ea.e( a.value );
+                            ea.f( a.value );
                             // try again, in case there are more messages
                             s.par( this );
                         }
@@ -88,7 +85,7 @@ public abstract class Scheduler {
             };
 
             // Effect's body -- queues up a message and tries to unsuspend the actor
-            @Override public void e(T a) {
+            @Override public void f(T a) {
                 mbox.add( new Numbered<>( atomicLong.incrementAndGet(), a ) );
                 work();
             }
@@ -114,12 +111,8 @@ public abstract class Scheduler {
         scheduleAt( timedT.time, timedT.value );
     }
 
-    public Effect<Timed<SchedulerTask>> toEffect() {
-        return new Effect<Timed<SchedulerTask>>() {
-            @Override public void e(Timed<SchedulerTask> tTimed) {
-                schedule( tTimed );
-            }
-        };
+    public Effect1<Timed<SchedulerTask>> toEffect() {
+        return this::schedule;
     }
 
     public abstract void scheduleAt(DateTime time, SchedulerTask t);

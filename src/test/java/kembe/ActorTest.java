@@ -4,6 +4,7 @@ import fj.Effect;
 import fj.Unit;
 import fj.control.parallel.Actor;
 import fj.control.parallel.Strategy;
+import fj.function.Effect1;
 import kembe.util.Actors;
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,29 +25,25 @@ public class ActorTest {
         final long n = 10000;
         final CountDownLatch latch = new CountDownLatch( 1 );
 
-        final Actor<String> a = Actors.stackSafeQueueActor( Strategy.<Unit>executorStrategy( Executors.newSingleThreadExecutor() ), new Effect<String>() {
-            @Override public void e(String s) {
-                if (receivedCounter.incrementAndGet() == n)
-                    latch.countDown();
+        final Actor<String> a = Actors.stackSafeQueueActor( Strategy.<Unit>executorStrategy( Executors.newSingleThreadExecutor() ), s -> {
+            if (receivedCounter.incrementAndGet() == n)
+                latch.countDown();
 
-                if(receivedCounter.get()==10)
-                    throw new Error("Lets seee");
+            if(receivedCounter.get()==10)
+                throw new Error("Lets seee");
 
-                try {
-                    Thread.sleep( 2 );
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            try {
+                Thread.sleep( 2 );
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         } );
 
 
-        Runnable r = new Runnable() {
-            @Override public void run() {
-                while (sentCounter.getAndIncrement() < n)
-                    a.act( "jalla" );
+        Runnable r = () -> {
+            while (sentCounter.getAndIncrement() < n)
+                a.act( "jalla" );
 
-            }
         };
 
         executor.submit( r );

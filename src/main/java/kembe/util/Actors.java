@@ -3,6 +3,7 @@ package kembe.util;
 import fj.*;
 import fj.control.parallel.Actor;
 import fj.control.parallel.Strategy;
+import fj.function.Effect1;
 
 import java.util.Comparator;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -11,8 +12,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Actors {
 
-    public static <T> Actor<T> orderedActor(final Strategy<Unit> s, final Ord<T> ord, final Effect<T> ea) {
-        return Actor.actor( s, new Effect<T>() {
+    public static <T> Actor<T> orderedActor(final Strategy<Unit> s, final Ord<T> ord, final Effect1<T> ea) {
+        return Actor.actor( s, new Effect1<T>() {
 
             // Lock to ensure the actor only acts on one message at a time
             AtomicBoolean suspended = new AtomicBoolean( true );
@@ -27,7 +28,7 @@ public class Actors {
                     T a = mbox.pollFirst();
                     // if there is one, process it
                     if (a != null) {
-                        ea.e( a );
+                        ea.f( a );
                         // try again, in case there are more messages
                         s.par( this );
                     }
@@ -42,7 +43,7 @@ public class Actors {
             };
 
             // Effect's body -- queues up a message and tries to unsuspend the actor
-            @Override public void e(T a) {
+            @Override public void f(T a) {
                 mbox.add( a );
                 work();
             }
@@ -61,8 +62,8 @@ public class Actors {
      * With respect to an enqueueing actor or thread, this actor will process messages in the same order
      * as they are sent.
      */
-    public static <T> Actor<T> stackSafeQueueActor(final Strategy<Unit> s, final Effect<T> ea) {
-        return Actor.actor( Strategy.<Unit>seqStrategy(), new Effect<T>() {
+    public static <T> Actor<T> stackSafeQueueActor(final Strategy<Unit> s, final Effect1<T> ea) {
+        return Actor.actor( Strategy.<Unit>seqStrategy(), new Effect1<T>() {
 
             // Lock to ensure the actor only acts on one message at a time
             AtomicBoolean suspended = new AtomicBoolean( true );
@@ -78,7 +79,7 @@ public class Actors {
                     try {
                         while (!mbox.isEmpty()) {
                             T a = mbox.poll();
-                            ea.e( a );
+                            ea.f( a );
                         }
 
 
@@ -95,7 +96,7 @@ public class Actors {
             };
 
             // Effect's body -- queues up a message and tries to unsuspend the actor
-            @Override public void e(T a) {
+            @Override public void f(T a) {
                 mbox.offer( a );
                 work();
             }
@@ -112,16 +113,14 @@ public class Actors {
     ;
 
     public static <A> Comparator<A> toComparator(final Ord<A> ord) {
-        return new Comparator<A>() {
-            @Override public int compare(A o1, A o2) {
-                Ordering o = ord.compare( o1, o2 );
-                if (o.equals( Ordering.LT ))
-                    return -1;
-                else if (o.equals( Ordering.EQ ))
-                    return 0;
-                else
-                    return 1;
-            }
+        return (o1, o2) -> {
+            Ordering o = ord.compare( o1, o2 );
+            if (o.equals( Ordering.LT ))
+                return -1;
+            else if (o.equals( Ordering.EQ ))
+                return 0;
+            else
+                return 1;
         };
     }
 }

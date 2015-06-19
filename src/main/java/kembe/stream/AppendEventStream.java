@@ -1,7 +1,7 @@
 package kembe.stream;
 
-import fj.Effect;
 import fj.Unit;
+import fj.function.Effect1;
 import kembe.EventStream;
 import kembe.EventStreamSubscriber;
 import kembe.OpenEventStream;
@@ -18,10 +18,6 @@ public class AppendEventStream<A> extends EventStream<A> {
     }
 
     @Override public OpenEventStream<A> open(final EventStreamSubscriber<A> subscriber) {
-        return one.open( subscriber.onDone( new Effect<Unit>() {
-            @Override public void e(Unit unit) {
-                other.open( subscriber );
-            }
-        } ) );
+        return one.open( subscriber.onDone( unit -> other.open( subscriber ) ) );
     }
 }

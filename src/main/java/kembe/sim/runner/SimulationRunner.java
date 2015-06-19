@@ -3,6 +3,7 @@ package kembe.sim.runner;
 import fj.Effect;
 import fj.F;
 import fj.data.List;
+import fj.function.Effect1;
 import kembe.EventStream;
 import kembe.EventStreamSubscriber;
 import kembe.OpenEventStream;
@@ -41,21 +42,13 @@ public class SimulationRunner {
         return new EventStream<Timed<SimEvent>>() {
             @Override public OpenEventStream<Timed<SimEvent>> open(final EventStreamSubscriber<Timed<SimEvent>> effect) {
 
-                scheduler.scheduleAt( startTime, new SchedulerTask() {
-                    @Override public void run(DateTime time) {
-                        startSignals
-                                .map( Timed.<Signal>timed( startTime ) )
-                                .map( scheduleTask( effect ) )
-                                .foreach( scheduler.toEffect() );
-                    }
-                } );
+                scheduler.scheduleAt( startTime, time -> startSignals
+                        .map( Timed.<Signal>timed( startTime ) )
+                        .map( scheduleTask( effect ) )
+                        .foreachDoEffect( scheduler.toEffect() ) );
 
 
-                scheduler.scheduleAt( endTime.plusMillis( 1 ), new SchedulerTask() {
-                    @Override public void run(DateTime time) {
-                        effect.e( StreamEvent.<Timed<SimEvent>>done() );
-                    }
-                } );
+                scheduler.scheduleAt( endTime.plusMillis( 1 ), time -> effect.e( StreamEvent.<Timed<SimEvent>>done() ) );
 
                 final EventStream<Timed<SimEvent>> self = this;
                 return new OpenEventStream<Timed<SimEvent>>() {
@@ -89,34 +82,17 @@ public class SimulationRunner {
     private List<Timed<Signal>> getNextInvocations(final SimAgentContext ctx, Step step) {
         return step.action
                 .either(
-                        new F<SignalSchedule, List<Timed<Signal>>>() {
-                            @Override public List<Timed<Signal>> f(SignalSchedule signalOccurring) {
-                                return List.single(
-                                        new Timed<>(
-                                                signalOccurring.randomSleep.after( ctx.currentTime ).next( random ),
-                                                signalOccurring.value.f( ctx ) ) );
-                            }
-                        },
-                        new F<List<SignalBuilder>, List<Timed<Signal>>>() {
-                            @Override public List<Timed<Signal>> f(List<SignalBuilder> messages) {
-                                return messages.map( new F<SignalBuilder, Timed<Signal>>() {
-                                    @Override public Timed<Signal> f(SignalBuilder signal) {
-                                        return new Timed<>(
-                                                ctx.currentTime.plusMillis( 1 ),
-                                                signal.f( ctx ) );
-                                    }
-                                } );
-                            }
-                        }
+                        signalOccurring -> List.single( new Timed<>(
+                                signalOccurring.randomSleep.after( ctx.currentTime ).next( random ),
+                                signalOccurring.value.f( ctx ) ) ),
+                        messages -> messages.map( signal -> new Timed<>(
+                                ctx.currentTime.plusMillis( 1 ),
+                                signal.f( ctx ) ) )
                 );
     }
 
     private F<Timed<Signal>, Timed<SchedulerTask>> scheduleTask(final EventStreamSubscriber<Timed<SimEvent>> listener) {
-        return new F<Timed<Signal>, Timed<SchedulerTask>>() {
-            @Override public Timed<SchedulerTask> f(Timed<Signal> agentInvocationTimed) {
-                return new Timed<SchedulerTask>( agentInvocationTimed.time, new ScheduleInvocation( listener, agentInvocationTimed ) );
-            }
-        };
+        return agentInvocationTimed -> new Timed<>( agentInvocationTimed.time, new ScheduleInvocation( listener, agentInvocationTimed ) );
     }
 
     class ScheduleInvocation implements SchedulerTask {
@@ -144,16 +120,12 @@ public class SimulationRunner {
 
                 agents.put( context.id, step.nextHandler );
 
-                step.emittedEvents.foreach( new Effect<SimEventBuilder>() {
-                    @Override public void e(SimEventBuilder simEvent) {
-                        listener.e( StreamEvent.next( new Timed<>( time, simEvent.f( context ) ) ) );
-                    }
-                } );
+                step.emittedEvents.foreachDoEffect( simEvent -> listener.e( StreamEvent.next( new Timed<>( time, simEvent.f( context ) ) ) ) );
 
                 invocations
                         .filter( Timed.<Signal>isBeforeOrEqual( endTime.toInstant() ) )
                         .map( scheduleTask( listener ) )
-                        .foreach( scheduler.toEffect() );
+                        .foreachDoEffect( scheduler.toEffect() );
 
             } catch (Throwable e) {
                 listener.e( StreamEvent.<Timed<SimEvent>>error( new Exception( "Error during execution of simulation", e ) ) );

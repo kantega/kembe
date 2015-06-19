@@ -1,13 +1,11 @@
 package kembe;
 
-import fj.Effect;
-import fj.F;
-import fj.P1;
-import fj.Show;
+import fj.*;
 import fj.data.Either;
 import fj.data.Option;
 import fj.data.Stream;
 import fj.data.Validation;
+import fj.function.Effect1;
 import kembe.stream.*;
 import kembe.util.Functions;
 import kembe.util.Shows;
@@ -15,6 +13,7 @@ import kembe.util.Split;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.function.Supplier;
 
 
 public abstract class EventStream<A> {
@@ -22,10 +21,11 @@ public abstract class EventStream<A> {
 
     /**
      * Creates an empty eventstream that calls done() on the subscriber at once.
+     *
      * @param <A>
      * @return
      */
-    public static <A> EventStream<A> nil(){
+    public static <A> EventStream<A> nil() {
         return new EventStream<A>() {
             @Override public OpenEventStream<A> open(EventStreamSubscriber<A> subscriber) {
                 subscriber.done();
@@ -34,7 +34,7 @@ public abstract class EventStream<A> {
         };
     }
 
-    public static <A> EventStream<A> error(final Exception e){
+    public static <A> EventStream<A> error(final Exception e) {
         return new EventStream<A>() {
             @Override public OpenEventStream<A> open(EventStreamSubscriber<A> subscriber) {
                 subscriber.error( e );
@@ -44,11 +44,11 @@ public abstract class EventStream<A> {
         };
     }
 
-    public static <A> EventStream<A> one(A value){
-        return values(value);
+    public static <A> EventStream<A> one(A value) {
+        return values( value );
     }
 
-    public static <A> EventStream values(A ... values){
+    public static <A> EventStream values(A... values) {
         return fromIterable( Arrays.<A>asList( values ) );
     }
 
@@ -57,12 +57,7 @@ public abstract class EventStream<A> {
             @Override
             public OpenEventStream<A> open(final EventStreamSubscriber<A> effect) {
 
-                stream.foreach( new Effect<A>() {
-                    @Override
-                    public void e(A a) {
-                        effect.e( StreamEvent.next( a ) );
-                    }
-                } );
+                stream.foreachDoEffect( a -> effect.e( StreamEvent.next( a ) ) );
                 effect.e( StreamEvent.<A>done() );
 
                 return OpenEventStream.noOp( this );
@@ -70,17 +65,18 @@ public abstract class EventStream<A> {
         };
     }
 
-    public static <A> EventStream<A> fromIterable(final Iterable<A> iterable){
+    public static <A> EventStream<A> fromIterable(final Iterable<A> iterable) {
         return fromIterator( iterable.iterator() );
     }
 
-    public static <A> EventStream<A> fromIterator(final Iterator<A> iterator){
+    public static <A> EventStream<A> fromIterator(final Iterator<A> iterator) {
         return new EventStream<A>() {
             @Override public OpenEventStream<A> open(EventStreamSubscriber<A> subscriber) {
-                try{
-                while(iterator.hasNext()){
-                    subscriber.next( iterator.next() );
-                }}catch (Exception e){
+                try {
+                    while (iterator.hasNext()) {
+                        subscriber.next( iterator.next() );
+                    }
+                } catch (Exception e) {
                     subscriber.error( e );
                 }
                 subscriber.done();
@@ -91,15 +87,11 @@ public abstract class EventStream<A> {
     }
 
     public static <A> F<Stream<A>, EventStream<A>> fromStream() {
-        return new F<Stream<A>, EventStream<A>>() {
-            @Override public EventStream<A> f(Stream<A> as) {
-                return fromStream( as );
-            }
-        };
+        return EventStream::fromStream;
     }
 
-    public static <A> F<A, EventStream<A>> fromStream(F <A, Stream<A>> f) {
-        return f.andThen( EventStream.<A>fromStream() );
+    public static <A> F<A, EventStream<A>> fromStream(F<A, Stream<A>> f) {
+        return Function.andThen( f, EventStream.<A>fromStream() );
     }
 
     public static <A> EventStream<A> normalize(EventStream<Either<A, A>> eitherStream) {
@@ -107,12 +99,7 @@ public abstract class EventStream<A> {
     }
 
     public static <A> F<Either<A, A>, A> normalize() {
-        return new F<Either<A, A>, A>() {
-            @Override
-            public A f(Either<A, A> either) {
-                return Either.reduce( either );
-            }
-        };
+        return Either::reduce;
     }
 
     public static <E, A> F<EventStream<Validation<E, A>>, EventStream<A>> normalizeValidation(final Show<E> show) {
@@ -132,8 +119,8 @@ public abstract class EventStream<A> {
                                     @Override public StreamEvent<A> f(Exception e) {
                                         return StreamEvent.error( e );
                                     }
-                                }, new P1<StreamEvent<A>>() {
-                                    @Override public StreamEvent<A> _1() {
+                                }, new Supplier<StreamEvent<A>>() {
+                                    @Override public StreamEvent<A> get() {
                                         return StreamEvent.done();
                                     }
                                 }
@@ -159,21 +146,11 @@ public abstract class EventStream<A> {
     }
 
     public static <A> F<EventStream<A>, OpenEventStream<A>> open_(final EventStreamSubscriber<A> handler) {
-        return new F<EventStream<A>, OpenEventStream<A>>() {
-            @Override
-            public OpenEventStream<A> f(EventStream<A> stream) {
-                return stream.open( handler );
-            }
-        };
+        return stream -> stream.open( handler );
     }
 
     public static <A, B> F<EventStream<A>, EventStream<B>> lift(final F<A, B> f) {
-        return new F<EventStream<A>, EventStream<B>>() {
-            @Override
-            public EventStream<B> f(EventStream<A> stream) {
-                return stream.map( f );
-            }
-        };
+        return stream -> stream.map( f );
     }
 
     public static <E, T> EventStream<T> validation(EventStream<Validation<E, T>> validatingEventStream, Show<E> show) {
@@ -181,12 +158,7 @@ public abstract class EventStream<A> {
     }
 
     public static <E, T> F<EventStream<Validation<E, T>>, EventStream<T>> validation(final Show<E> show) {
-        return new F<EventStream<Validation<E, T>>, EventStream<T>>() {
-            @Override
-            public EventStream<T> f(EventStream<Validation<E, T>> stream) {
-                return validation( stream, show );
-            }
-        };
+        return stream -> validation( stream, show );
     }
 
     public static <A, B> EitherEventStream<A, B> or(EventStream<A> a, EventStream<B> b) {
@@ -209,12 +181,12 @@ public abstract class EventStream<A> {
         return flatten( mapStateful( as, s ) );
     }
 
-    public static <A> EventStream<A> tap(EventStream<A> as, EventStreamSubscriber<A> effect){
-        return new TapEventStream<>( as,effect );
+    public static <A> EventStream<A> tap(EventStream<A> as, EventStreamSubscriber<A> effect) {
+        return new TapEventStream<>( as, effect );
     }
 
-    public static <A> EventStreamFork<A> fork(EventStream<A> stream){
-        return new EventStreamFork<A>(stream);
+    public static <A> EventStreamFork<A> fork(EventStream<A> stream) {
+        return new EventStreamFork<A>( stream );
     }
 
     public abstract OpenEventStream<A> open(EventStreamSubscriber<A> subscriber);
@@ -227,29 +199,21 @@ public abstract class EventStream<A> {
         return new MappedEventStream<>( this, f );
     }
 
-    public <B> EventStream<B> mapV(final F<A,Validation<Exception,B>> f){
-        return EventStream.validation( this.map(f), Shows.exceptionShow );
+    public <B> EventStream<B> mapV(final F<A, Validation<Exception, B>> f) {
+        return EventStream.validation( this.map( f ), Shows.exceptionShow );
     }
 
 
-    public <B> EventStream<B> mapO(final F<A,Option<B>> f){
-        return new FlattenIterableEventStream<A,B>( this,f.andThen(new F<Option<B>, Iterable<B>>() {
-            @Override public Iterable<B> f(Option<B> bs) {
-                return bs;
-            }
-        }) );
+    public <B> EventStream<B> mapO(final F<A, Option<B>> f) {
+        return new FlattenIterableEventStream<>( this, Function.andThen( f, bs -> bs ) );
     }
 
     public <B> EventStream<B> mapStateful(final Mealy<A, B> stateMachine) {
-        return EventStream.mapStateful( this, stateMachine);
+        return EventStream.mapStateful( this, stateMachine );
     }
 
-    public <B> EventStream<B> mapStatefulO(final Mealy<A,Option<B>> stateMachine){
-        return bindStateful( this,stateMachine.map(new F<Option<B>, EventStream<B>>() {
-            @Override public EventStream<B> f(Option<B> bs) {
-                return EventStream.fromIterable( bs );
-            }
-        }) );
+    public <B> EventStream<B> mapStatefulO(final Mealy<A, Option<B>> stateMachine) {
+        return bindStateful( this, stateMachine.map( EventStream::fromIterable ) );
     }
 
     public <B> EventStream<B> mapEvent(final F<StreamEvent<A>, StreamEvent<B>> f) {
@@ -260,15 +224,15 @@ public abstract class EventStream<A> {
         return flatten( this.map( f ) );
     }
 
-    public <B> EventStream<B> bindEvent(F<StreamEvent<A>,EventStream<B>> f){
-        return new RawBoundEventStream(this,f);
+    public <B> EventStream<B> bindEvent(F<StreamEvent<A>, EventStream<B>> f) {
+        return new RawBoundEventStream( this, f );
     }
 
     public <B> EventStream<B> bindStateful(final Mealy<A, EventStream<B>> stateMachine) {
         return bindStateful( this, stateMachine );
     }
 
-    public <B> EventStream<B> bindEventStateful(final Mealy<StreamEvent<A>,EventStream<B>> f){
+    public <B> EventStream<B> bindEventStateful(final Mealy<StreamEvent<A>, EventStream<B>> f) {
         return new FlattenRawIterableStatefulEventStream<>( this, f );
     }
 
@@ -283,6 +247,7 @@ public abstract class EventStream<A> {
     /**
      * Opens first the argument eventstream, then this eventstream. Results from the other are buffered, and
      * forwarded when this eventstream is done
+     *
      * @param eventual
      * @return
      */
@@ -290,15 +255,15 @@ public abstract class EventStream<A> {
         return new ParallellBufferedAndThenEventStream<>( this, eventual );
     }
 
-    public EventStream<A> append(EventStream<A> other){
-        return new AppendEventStream<A>(this,other);
+    public EventStream<A> append(EventStream<A> other) {
+        return new AppendEventStream<A>( this, other );
     }
 
-    public EventStream<A> tap(EventStreamSubscriber<A> effect){
-        return tap(this,effect);
+    public EventStream<A> tap(EventStreamSubscriber<A> effect) {
+        return tap( this, effect );
     }
 
-    public EventStreamFork<A> fork(){
+    public EventStreamFork<A> fork() {
         return EventStream.fork( this );
     }
 

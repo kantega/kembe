@@ -3,6 +3,7 @@ package kembe;
 import fj.Effect;
 import fj.F;
 import fj.Unit;
+import fj.function.Effect1;
 
 public abstract class EventStreamSubscriber<A> {
 
@@ -14,19 +15,19 @@ public abstract class EventStreamSubscriber<A> {
         };
     }
 
-    public static <A> EventStreamSubscriber<A> create(final Effect<StreamEvent<A>> handler) {
+    public static <A> EventStreamSubscriber<A> create(final Effect1<StreamEvent<A>> handler) {
         return new EventStreamSubscriber<A>() {
             @Override public void e(StreamEvent<A> aStreamEvent) {
-                handler.e( aStreamEvent );
+                handler.f( aStreamEvent );
             }
         };
     }
 
-    public <B> EventStreamSubscriber<B> onNext(final Effect<B> effect) {
+    public <B> EventStreamSubscriber<B> onNext(final Effect1<B> effect) {
         final EventStreamSubscriber<A> self = this;
         return create( new EventStreamHandler<B>() {
             @Override public void next(B o) {
-                effect.e( o );
+                effect.f( o );
             }
 
             @Override public void error(Exception e) {
@@ -39,7 +40,7 @@ public abstract class EventStreamSubscriber<A> {
         } );
     }
 
-    public EventStreamSubscriber<A> onError(final Effect<Exception> effect) {
+    public EventStreamSubscriber<A> onError(final Effect1<Exception> effect) {
         final EventStreamSubscriber<A> self = this;
         return create( new EventStreamHandler<A>() {
             @Override public void next(A o) {
@@ -47,7 +48,7 @@ public abstract class EventStreamSubscriber<A> {
             }
 
             @Override public void error(Exception e) {
-                effect.e( e );
+                effect.f( e );
             }
 
             @Override public void done() {
@@ -56,7 +57,7 @@ public abstract class EventStreamSubscriber<A> {
         } );
     }
 
-    public EventStreamSubscriber<A> onDone(final Effect<Unit> effect) {
+    public EventStreamSubscriber<A> onDone(final Effect1<Unit> effect) {
         final EventStreamSubscriber<A> self = this;
         return create( new EventStreamHandler<A>() {
             @Override public void next(A o) {
@@ -68,7 +69,7 @@ public abstract class EventStreamSubscriber<A> {
             }
 
             @Override public void done() {
-                effect.e( Unit.unit() );
+                effect.f( Unit.unit() );
             }
         } );
     }
@@ -105,12 +106,8 @@ public abstract class EventStreamSubscriber<A> {
         };
     }
 
-    public Effect<StreamEvent<A>> toEffect() {
-        return new Effect<StreamEvent<A>>() {
-            @Override public void e(StreamEvent<A> aStreamEvent) {
-                EventStreamSubscriber.this.e( aStreamEvent );
-            }
-        };
+    public Effect1<StreamEvent<A>> toEffect() {
+        return EventStreamSubscriber.this::e;
     }
 
     public abstract void e(StreamEvent<A> event);

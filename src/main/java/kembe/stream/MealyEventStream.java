@@ -1,6 +1,7 @@
 package kembe.stream;
 
 import fj.Effect;
+import fj.function.Effect1;
 import kembe.*;
 
 public class MealyEventStream<A, B> extends EventStream<B> {
@@ -17,12 +18,12 @@ public class MealyEventStream<A, B> extends EventStream<B> {
     @Override public OpenEventStream<B> open(final EventStreamSubscriber<B> effect) {
         OpenEventStream<A> open =
                 source.open(
-                        effect.<A>onNext(
-                                new Effect<A>() {
+                        effect.onNext(
+                                new Effect1<A>() {
                                     volatile Mealy<A, B> state = initialMealy;
 
                                     @Override
-                                    public void e(A next) {
+                                    public void f(A next) {
                                         try {
                                             Mealy.Transition<A, B> t = state.apply( next );
                                             state = t.nextMealy;

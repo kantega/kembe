@@ -3,6 +3,7 @@ package kembe;
 import fj.*;
 import fj.data.List;
 import fj.data.Validation;
+import fj.function.Effect1;
 import fj.test.Arg;
 import fj.test.CheckResult;
 import fj.test.Property;
@@ -57,8 +58,8 @@ public class CheckResults {
     }
 
     public static void assertAndPrintResults(final List<P2<String, CheckResult>> results) {
-        results.foreach( new Effect<P2<String, CheckResult>>() {
-            public void e(final P2<String, CheckResult> result) {
+        results.foreachDoEffect( new Effect1<P2<String, CheckResult>>() {
+            public void f(final P2<String, CheckResult> result) {
                 out.print( " * " + result._1() + ": " );
                 summary( argReflectionShow() ).println( result._2() );
             }
@@ -73,8 +74,8 @@ public class CheckResults {
 
         List<String> resultSummary = results.filter( new F<P2<String, CheckResult>, Boolean>() {
             public Boolean f(final P2<String, CheckResult> result) {
-                result._2().exception().foreach( new Effect<Throwable>() {
-                    public void e(Throwable throwable) {
+                result._2().exception().foreachDoEffect( new Effect1<Throwable>() {
+                    public void f(Throwable throwable) {
                         throw new AssertionError( summary( argReflectionShow() ).showS( result._2() ) + ": " + throwable.getMessage() );
                     }
                 } );

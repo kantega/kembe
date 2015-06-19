@@ -2,15 +2,12 @@ package kembe;
 
 import fj.Effect;
 import fj.data.List;
+import fj.function.Effect1;
 
 public abstract class OpenEventStream<A> {
 
-    public static <A> Effect<OpenEventStream<A>> closeE() {
-        return new Effect<OpenEventStream<A>>() {
-            @Override public void e(OpenEventStream<A> openEventStream) {
-                openEventStream.close();
-            }
-        };
+    public static <A> Effect1<OpenEventStream<A>> closeE() {
+        return OpenEventStream<A>::close;
     }
 
     public static <A> OpenEventStream<A> noOp(final EventStream<A> current) {
