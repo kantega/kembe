@@ -23,6 +23,13 @@ public abstract class EventStreamSubscriber<A> {
         };
     }
 
+    public static <A> EventStreamSubscriber<A> subscriber() {
+        return new EventStreamSubscriber<A>() {
+            @Override public void e(StreamEvent<A> aStreamEvent) {
+            }
+        };
+    }
+
     public <B> EventStreamSubscriber<B> onNext(final Effect1<B> effect) {
         final EventStreamSubscriber<A> self = this;
         return create( new EventStreamHandler<B>() {
@@ -111,5 +118,8 @@ public abstract class EventStreamSubscriber<A> {
     }
 
     public abstract void e(StreamEvent<A> event);
+
+
+
 
 }
