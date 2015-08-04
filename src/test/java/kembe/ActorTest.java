@@ -1,10 +1,8 @@
 package kembe;
 
-import fj.Effect;
 import fj.Unit;
 import fj.control.parallel.Actor;
 import fj.control.parallel.Strategy;
-import fj.function.Effect1;
 import kembe.util.Actors;
 import org.junit.Assert;
 import org.junit.Test;

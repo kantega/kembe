@@ -1,9 +1,7 @@
 package kembe.stream;
 
-import fj.Effect;
 import fj.Show;
 import fj.data.Validation;
-import fj.function.Effect1;
 import kembe.EventStream;
 import kembe.EventStreamSubscriber;
 import kembe.OpenEventStream;

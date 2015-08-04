@@ -36,6 +36,7 @@ public class EventStreamFactoryMethodsTest {
         EventStream
                 .fromStream( Stream.range( from, to ) )
                 .map( Show.intShow.showS_() )
+                .tap(EventStreamSubscriber.subscriber().onNext( System.out::println ))
                 .open( handler( String.class, nextLatch, doneLatch ) );
 
 
@@ -90,12 +91,7 @@ public class EventStreamFactoryMethodsTest {
         Split<Integer, Integer> streams =
                 EventStream.split( EventStream
                         .fromStream( Stream.range( from, to ) )
-                        .map( new F<Integer, Either<Integer, Integer>>() {
-                            @Override
-                            public Either<Integer, Integer> f(Integer integer) {
-                                return Either.iif( Integers.even.f( integer ), P.p( integer ), P.p( integer ) );
-                            }
-                        } ) );
+                        .map( integer -> Either.iif( Integers.even.f( integer ), P.p( integer ), P.p( integer ) ) ) );
 
         streams._1().open( handler( Integer.class, nextLatch1, doneLatch1 ) );
         streams._2().open( handler( Integer.class, nextLatch2, doneLatch2 ) );

@@ -1,6 +1,5 @@
 package kembe.stream;
 
-import fj.Effect;
 import fj.Unit;
 import fj.control.parallel.Actor;
 import fj.control.parallel.Strategy;
@@ -51,7 +50,6 @@ public class ParallellBufferedAndThenEventStream<A> extends EventStream<A> {
                     final EventStreamSubscriber<A> firstHandler =
                             effect.onDone(
                                     u -> {
-
                                         buffer.forEach( effect::e );
                                         flushed.set( true );
                                         buffer.clear();
@@ -74,9 +72,11 @@ public class ParallellBufferedAndThenEventStream<A> extends EventStream<A> {
                     }
                 };
 
-        OpenEventStream<A> eventualOpenStream = eventual.open( EventStreamSubscriber.create( Effects.comap(bufferingEffect, Either.<StreamEvent<A>, StreamEvent<A>>right_() ) ) );
-        OpenEventStream<A> firstOpenStream = first.open(EventStreamSubscriber.create( Effects.comap( bufferingEffect, Either.<StreamEvent<A>, StreamEvent<A>>left_() ) ) );
+        OpenEventStream<A> eventualOpenStream =
+                eventual.open( EventStreamSubscriber.create( Effects.comap(bufferingEffect, Either.<StreamEvent<A>, StreamEvent<A>>right_() ) ) );
 
+        OpenEventStream<A> firstOpenStream =
+                first.open(EventStreamSubscriber.create( Effects.comap( bufferingEffect, Either.<StreamEvent<A>, StreamEvent<A>>left_() ) ) );
 
         return OpenEventStream.wrap( this, List.<OpenEventStream<?>>list( firstOpenStream, eventualOpenStream ) );
     }

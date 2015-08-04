@@ -1,8 +1,6 @@
 package kembe.stream;
 
-import fj.Effect;
 import fj.F;
-import fj.function.Effect1;
 import kembe.EventStream;
 import kembe.EventStreamSubscriber;
 import kembe.OpenEventStream;

@@ -1,6 +1,5 @@
 package kembe.stream;
 
-import fj.Effect;
 import fj.function.Effect1;
 import kembe.*;
 

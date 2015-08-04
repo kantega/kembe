@@ -23,7 +23,7 @@ public class PerformanceTest {
 
         for(String s : Stream.iterableStream( list)){
             counter.incrementAndGet();
-            if(counter.get()%100000==0)
+            if(counter.get()%1000000==0)
                 System.out.println( s );
         }
 
