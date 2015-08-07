@@ -5,12 +5,10 @@ import fj.control.parallel.Actor;
 import fj.control.parallel.Strategy;
 import fj.data.Either;
 import fj.data.List;
-import fj.function.Effect1;
 import kembe.EventStream;
 import kembe.EventStreamSubscriber;
 import kembe.OpenEventStream;
 import kembe.StreamEvent;
-import kembe.util.Actors;
 
 public class EitherEventStream<A, B> extends EventStream<Either<A, B>> {
 
@@ -28,22 +26,18 @@ public class EitherEventStream<A, B> extends EventStream<Either<A, B>> {
     @Override
     public OpenEventStream<Either<A, B>> open(final EventStreamSubscriber<Either<A, B>> effect) {
 
-        Effect1<StreamEvent<Either<A, B>>> sync =
-                new Effect1<StreamEvent<Either<A, B>>>() {
-                    @Override public synchronized void f(StreamEvent<Either<A, B>> eitherStreamEvent) {
-                        effect.e( eitherStreamEvent );
-                    }
-                };
+        Actor<StreamEvent<Either<A, B>>> sync =
+                Actor.queueActor( Strategy.<Unit>seqStrategy(), effect::e );
 
 
         final OpenEventStream<A> oA = one.open( new EventStreamSubscriber<A>() {
             @Override public void e(StreamEvent<A> event) {
-                sync.f( event.map( Either.<A, B>left_() ) );
+                sync.act( event.map( Either.<A, B>left_() ) );
             }
         } );
         final OpenEventStream<B> oB = other.open( new EventStreamSubscriber<B>() {
             @Override public void e(StreamEvent<B> event) {
-                sync.f( event.map( Either.<A, B>right_() ) );
+                sync.act( event.map( Either.<A, B>right_() ) );
             }
         } );
 
