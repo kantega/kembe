@@ -16,7 +16,7 @@ public class EventBus<A> {
     private final Actor<StreamEvent<A>> actor;
 
     public EventBus() {
-        actor = Actor.queueActor( Strategy.<Unit>executorStrategy( Executors.newSingleThreadExecutor() ), a -> {
+        actor = Actor.queueActor( Strategy.<Unit>seqStrategy(), a -> {
                     for (EventStreamSubscriber<A> observer : observers) {
                         observer.e( a );
                     }
