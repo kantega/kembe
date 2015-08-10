@@ -9,6 +9,7 @@ import kembe.EventStream;
 import kembe.EventStreamSubscriber;
 import kembe.OpenEventStream;
 import kembe.StreamEvent;
+import kembe.util.Actors;
 
 public class EitherEventStream<A, B> extends EventStream<Either<A, B>> {
 
@@ -27,7 +28,7 @@ public class EitherEventStream<A, B> extends EventStream<Either<A, B>> {
     public OpenEventStream<Either<A, B>> open(final EventStreamSubscriber<Either<A, B>> effect) {
 
         Actor<StreamEvent<Either<A, B>>> sync =
-                Actor.queueActor( Strategy.<Unit>seqStrategy(), effect::e );
+                Actors.stackSafeQueueActor( Strategy.<Unit>seqStrategy(), effect::e );
 
 
         final OpenEventStream<A> oA = one.open( new EventStreamSubscriber<A>() {
