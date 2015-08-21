@@ -33,6 +33,6 @@ public class MealyEventStream<A, B> extends EventStream<B> {
                                     }
                                 } ) );
 
-        return OpenEventStream.wrap( this, open );
+        return OpenEventStream.wrap( new MealyEventStream<>( source, initialMealy ), open );
     }
 }

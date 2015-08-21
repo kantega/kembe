@@ -71,17 +71,22 @@ public abstract class EventStream<A> {
 
     public static <A> EventStream<A> fromIterator(final Iterator<A> iterator) {
         return new EventStream<A>() {
+
+            private volatile boolean open = true;
+
             @Override public OpenEventStream<A> open(EventStreamSubscriber<A> subscriber) {
                 try {
-                    while (iterator.hasNext()) {
+                    while (iterator.hasNext() && open) {
                         subscriber.next( iterator.next() );
                     }
                 } catch (Exception e) {
                     subscriber.error( e );
+                } finally {
+                    subscriber.done();
                 }
-                subscriber.done();
 
-                return OpenEventStream.noOp( this );
+
+                return OpenEventStream.onClose( () -> open = false, fromIterator( iterator ) );
             }
         };
     }

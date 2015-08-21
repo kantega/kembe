@@ -1,7 +1,7 @@
 package kembe;
 
-import fj.Effect;
 import fj.data.List;
+import fj.function.Effect0;
 import fj.function.Effect1;
 
 public abstract class OpenEventStream<A> {
@@ -26,6 +26,15 @@ public abstract class OpenEventStream<A> {
                     prev.close();
                 }
                 return current;
+            }
+        };
+    }
+
+    public static <A> OpenEventStream<A> onClose(Effect0 close,EventStream<A> next){
+        return new OpenEventStream<A>() {
+            @Override public EventStream<A> close() {
+                close.f();
+                return next;
             }
         };
     }
