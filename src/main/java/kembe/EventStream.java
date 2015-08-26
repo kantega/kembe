@@ -108,32 +108,14 @@ public abstract class EventStream<A> {
     }
 
     public static <E, A> F<EventStream<Validation<E, A>>, EventStream<A>> normalizeValidation(final Show<E> show) {
-        return new F<EventStream<Validation<E, A>>, EventStream<A>>() {
-            @Override public EventStream<A> f(EventStream<Validation<E, A>> validationEventStream) {
-                return new RawMappedEventStream<>( validationEventStream, new F<StreamEvent<Validation<E, A>>, StreamEvent<A>>() {
-                    @Override public StreamEvent<A> f(StreamEvent<Validation<E, A>> validationStreamEvent) {
-                        return validationStreamEvent.fold(
-                                new F<Validation<E, A>, StreamEvent<A>>() {
-                                    @Override public StreamEvent<A> f(Validation<E, A> as) {
-                                        if (as.isSuccess())
-                                            return StreamEvent.next( as.success() );
-                                        else
-                                            return StreamEvent.error( new Exception( show.showS( as.fail() ) ) );
-                                    }
-                                }, new F<Exception, StreamEvent<A>>() {
-                                    @Override public StreamEvent<A> f(Exception e) {
-                                        return StreamEvent.error( e );
-                                    }
-                                }, new Supplier<StreamEvent<A>>() {
-                                    @Override public StreamEvent<A> get() {
-                                        return StreamEvent.done();
-                                    }
-                                }
-                        );
-                    }
-                } );
-            }
-        };
+        return validationEventStream -> new RawMappedEventStream<>( validationEventStream, validationStreamEvent -> validationStreamEvent.fold(
+                as -> {
+                    if (as.isSuccess())
+                        return StreamEvent.next( as.success() );
+                    else
+                        return StreamEvent.error( new Exception( show.showS( as.fail() ) ) );
+                }, StreamEvent::error, StreamEvent::done
+        ) );
     }
 
     public static <A, B> Split<A, B> split(final EventStream<Either<A, B>> eitherStream) {
