@@ -254,4 +254,9 @@ public abstract class EventStream<A> {
         return EventStream.fork( this );
     }
 
+    public EventStream<A> appendAfterLast(F<A,EventStream<A>> nextProducer){
+        return new AppendAfterLastEventStream<>( this,nextProducer );
+    }
+
+
 }
