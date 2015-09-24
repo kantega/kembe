@@ -108,12 +108,12 @@ public abstract class EventStream<A> {
     }
 
     public static <E, A> F<EventStream<Validation<E, A>>, EventStream<A>> normalizeValidation(final Show<E> show) {
-        return validationEventStream -> new RawMappedEventStream<>( validationEventStream, validationStreamEvent -> validationStreamEvent.fold(
+        return validationEventStream -> new RawMappedEventStream<>( validationEventStream, validationStreamEvent -> validationStreamEvent.<StreamEvent<A>>fold(
                 as -> {
                     if (as.isSuccess())
                         return StreamEvent.next( as.success() );
                     else
-                        return StreamEvent.error( new Exception( show.showS( as.fail() ) ) );
+                        return StreamEvent.<A>error( new Exception( show.showS( as.fail() ) ) );
                 }, StreamEvent::error, StreamEvent::done
         ) );
     }
