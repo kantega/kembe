@@ -34,6 +34,8 @@ public class AppendAfterLastEventStream<A> extends EventStream<A> {
             @Override public void done() {
                 if(last!=null)
                     next.f( last ).open( subscriber );
+                else
+                    subscriber.done();
             }
         } ) );
     }
