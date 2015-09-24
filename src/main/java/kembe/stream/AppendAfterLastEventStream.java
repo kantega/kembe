@@ -6,6 +6,8 @@ import kembe.EventStreamHandler;
 import kembe.EventStreamSubscriber;
 import kembe.OpenEventStream;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 public class AppendAfterLastEventStream<A> extends EventStream<A> {
 
     final EventStream<A> first;
@@ -18,7 +20,8 @@ public class AppendAfterLastEventStream<A> extends EventStream<A> {
     }
 
     @Override public OpenEventStream<A> open(EventStreamSubscriber<A> subscriber) {
-        return first.open( EventStreamSubscriber.create( new EventStreamHandler<A>() {
+        AtomicReference<OpenEventStream<A>> secondOpen = new AtomicReference<>( null );
+        OpenEventStream<A> firstOpen = first.open( EventStreamSubscriber.create( new EventStreamHandler<A>() {
 
             A last = null;
 
@@ -32,11 +35,20 @@ public class AppendAfterLastEventStream<A> extends EventStream<A> {
             }
 
             @Override public void done() {
-                if(last!=null)
-                    next.f( last ).open( subscriber );
+                if (last != null)
+                    secondOpen.set( next.f( last ).open( subscriber ) );
                 else
                     subscriber.done();
             }
         } ) );
+
+        //Not threadsafe
+        return new OpenEventStream<A>() {
+            @Override public EventStream<A> close() {
+                firstOpen.close();
+                if (secondOpen.get() != null) secondOpen.get().close();
+                return new AppendAfterLastEventStream<>( first, next );
+            }
+        };
     }
 }
