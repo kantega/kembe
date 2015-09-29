@@ -1,6 +1,7 @@
 package kembe.stream;
 
 import fj.F;
+import fj.data.Option;
 import kembe.EventStream;
 import kembe.EventStreamHandler;
 import kembe.EventStreamSubscriber;
@@ -12,9 +13,9 @@ public class AppendAfterLastEventStream<A> extends EventStream<A> {
 
     final EventStream<A> first;
 
-    final F<A, EventStream<A>> next;
+    final F<Option<A>, EventStream<A>> next;
 
-    public AppendAfterLastEventStream(EventStream<A> first, F<A, EventStream<A>> next) {
+    public AppendAfterLastEventStream(EventStream<A> first, F<Option<A>, EventStream<A>> next) {
         this.first = first;
         this.next = next;
     }
@@ -35,10 +36,7 @@ public class AppendAfterLastEventStream<A> extends EventStream<A> {
             }
 
             @Override public void done() {
-                if (last != null)
-                    secondOpen.set( next.f( last ).open( subscriber ) );
-                else
-                    subscriber.done();
+                secondOpen.set( next.f( Option.fromNull( last ) ).open( subscriber ) );
             }
         } ) );
 
