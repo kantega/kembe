@@ -258,5 +258,9 @@ public abstract class EventStream<A> {
         return new AppendAfterLastEventStream<>( this, nextProducer );
     }
 
+    public <B> EventStream<B> mod(F<EventStream<A>,EventStream<B>> f){
+        return f.f(this);
+    }
+
 
 }
