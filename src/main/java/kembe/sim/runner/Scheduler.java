@@ -100,7 +100,7 @@ public abstract class Scheduler {
     }
 
     private static <T> Ord<Numbered<T>> numberedOrd(Ord<T> ordT) {
-        return Ord.p2Ord( ordT, Ord.longOrd ).comap( new F<Numbered<T>, P2<T, Long>>() {
+        return Ord.p2Ord( ordT, Ord.longOrd ).contramap( new F<Numbered<T>, P2<T, Long>>() {
             @Override public P2<T, Long> f(Numbered<T> tNumbered) {
                 return P.p( tNumbered.value, tNumbered.number );
             }

@@ -26,13 +26,13 @@ public class Probability extends Rand<Boolean> {
 
     public static final Probability onePercent = new Probability( new DoubleFromZeroIncToOne( 0.010 ) );
 
-    public static Ord<Probability> ord = Ord.doubleOrd.comap( new F<Probability, Double>() {
+    public static Ord<Probability> ord = Ord.doubleOrd.contramap( new F<Probability, Double>() {
         @Override public Double f(Probability probability) {
             return probability.threshold.value;
         }
     } );
 
-    public static Equal<Probability> roundedEq = Equal.bigdecimalEqual.comap( new F<Probability, BigDecimal>() {
+    public static Equal<Probability> roundedEq = Equal.bigdecimalEqual.contramap( new F<Probability, BigDecimal>() {
         @Override public BigDecimal f(Probability probability) {
             return new BigDecimal( probability.threshold.value ).setScale( 8, RoundingMode.DOWN );
         }

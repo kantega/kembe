@@ -9,7 +9,7 @@ import java.util.Random;
 
 public class Time {
 
-    public static final Ord<Instant> instantOrd = Ord.longOrd.comap( new F<Instant, Long>() {
+    public static final Ord<Instant> instantOrd = Ord.longOrd.contramap( new F<Instant, Long>() {
         @Override public Long f(Instant instant) {
             return instant.getMillis();
         }

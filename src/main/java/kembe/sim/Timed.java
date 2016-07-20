@@ -21,7 +21,7 @@ public class Timed<T> {
     }
 
     public static <T> Ord<Timed<T>> timedOrd(){
-        return Ord.longOrd.comap( new F<Timed<T>, Long>() {
+        return Ord.longOrd.contramap( new F<Timed<T>, Long>() {
             @Override public Long f(Timed<T> t) {
                 return t.time.getMillis();
             }

@@ -1,6 +1,5 @@
 package kembe.sim.stat;
 
-import fj.test.Arbitrary;
 import fj.test.Gen;
 import fj.test.Property;
 import fj.test.reflect.Check;
@@ -15,8 +14,8 @@ import java.util.Random;
 
 public class RandWaitTest {
 
-    static final Arbitrary<LocalTime> arbLocalTime =
-            Arbitrary.arbitrary( Gen.choose( 0, 23 ).bind( Gen.choose( 0, 59 ), hour -> minute -> new LocalTime( hour, minute, 0, 0 ) ) );
+    static final Gen<LocalTime> arbLocalTime =
+            Gen.choose( 0, 23 ).bind( Gen.choose( 0, 59 ), hour -> minute -> new LocalTime( hour, minute, 0, 0 ) );
 
     static final DateTime now =
             new LocalTime( 6, 0 ).toDateTime( Time.now() );
@@ -36,8 +35,8 @@ public class RandWaitTest {
     static final Random random =
             new Random( 5 );
 
-    static final Arbitrary<DateTime> nextBetweenSevenAdnNine =
-            Arbitrary.arbitrary( Gen.gen( integer -> rand -> randNext.next( random ) ) );
+    static final Gen<DateTime> nextBetweenSevenAdnNine =
+            Gen.gen( integer -> rand -> randNext.next( random ) );
 
 
     Property p2 =

@@ -1,9 +1,6 @@
 package kembe.sim.rand;
 
-import fj.F;
-import fj.F2;
 import fj.P1;
-import fj.data.List;
 import fj.data.vector.V;
 import fj.data.vector.V2;
 import fj.test.Gen;
@@ -17,11 +14,8 @@ import kembe.sim.RandWait;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.Interval;
-import org.junit.Test;
 
 import java.util.Random;
-
-import static fj.test.Arbitrary.arbitrary;
 
 public class RandWaitTest {
 
@@ -31,7 +25,7 @@ public class RandWaitTest {
     @Name("RandWaitBetween must equally distribute durations in the interval")
     @CheckParams(minSize = 1,minSuccessful = 200)
     Property p1 = Property.property(
-            arbitrary( Gen.listOf( Gen.choose( 200, 500000 ).map( Time.intsToDuration )) ),
+            Gen.listOf( Gen.choose( 200, 500000 ).map( Time.intsToDuration )),
             list -> Property.implies( list.length()>4,new P1<Property>() {
                 @Override public Property _1() {
                     V2<Integer> count =
