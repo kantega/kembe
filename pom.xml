@@ -4,7 +4,7 @@
 
     <groupId>org.kantega.kembe</groupId>
     <artifactId>kembe-core</artifactId>
-    <version>2.25-SNAPSHOT</version>
+    <version>2.26-SNAPSHOT</version>
     <scm>
         <connection>scm:git:git@github.com:kantega/kembe.git</connection>
         <tag>kembe-core-2.8</tag>
