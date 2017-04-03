@@ -11,7 +11,7 @@
     </scm>
 
     <properties>
-        <functional-java.version>4.6</functional-java.version>
+        <functional-java.version>4.7</functional-java.version>
     </properties>
     <dependencies>
         <dependency>
