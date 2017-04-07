@@ -16,7 +16,7 @@
     <dependencies>
         <dependency>
             <groupId>org.functionaljava</groupId>
-            <artifactId>functionaljava</artifactId>
+            <artifactId>functionaljava_1.8</artifactId>
             <version>${functional-java.version}</version>
         </dependency>
         <dependency>
